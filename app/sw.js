@@ -1,6 +1,6 @@
 /* Service worker di Interrogami: salva l'app nel telefono così si apre anche senza rete.
    Le chiamate a Gemini passano sempre da internet. */
-const CACHE = "interrogami-v4";
+const CACHE = "interrogami-v7";
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-512-maskable.png"];
 
 self.addEventListener("install", (e) => {

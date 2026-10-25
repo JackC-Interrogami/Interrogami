@@ -217,6 +217,29 @@ ul.plain li { overflow-wrap: anywhere; }
 .warnban .why { color: var(--ink-soft); font-weight: 400; font-size: 0.9rem; }
 .warnban .links { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .tools .tag { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--pen); margin: 0; }
+.wikidet { margin: -4px 0 6px 12px; }
+.wikidet summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; }
+.wikidet summary::-webkit-details-marker { display: none; }
+.wikidet summary:hover { border-color: var(--pen); }
+.wikidet summary::after { content: "›"; margin-left: auto; color: var(--ink-soft); transition: transform 0.2s; }
+.wikidet[open] summary::after { transform: rotate(90deg); }
+.wikidet summary .wt { display: flex; flex-direction: column; min-width: 0; }
+.wikidet summary small { font-family: var(--font-body); font-weight: 400; color: var(--ink-soft); font-size: 0.85rem; line-height: 1.3; }
+.wlogo { font-family: Georgia, "Times New Roman", serif; font-weight: 700; width: 30px; height: 30px; border-radius: 8px; background: var(--card); border: 2px solid var(--line); display: grid; place-items: center; flex: none; }
+.wbody { display: flex; flex-direction: column; gap: 12px; padding: 12px 4px 4px; }
+.wmore { display: flex; flex-direction: column; gap: 8px; border-top: 2px dashed var(--line); padding-top: 12px; }
+.wsearch { display: flex; flex-wrap: wrap; gap: 8px; }
+.wsearch input { flex: 1 1 200px; min-width: 0; }
+.wlist { display: flex; flex-direction: column; gap: 10px; }
+.wiki { display: grid; grid-template-columns: 1fr; gap: 8px 12px; background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 12px; min-width: 0; }
+.wiki.has-img { grid-template-columns: 96px 1fr; }
+.wiki img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; border: 2px solid var(--line); grid-row: span 3; }
+.wiki b { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; overflow-wrap: anywhere; }
+.wiki .why { font-size: 0.85rem; color: var(--pen); font-weight: 700; }
+.wiki p { margin: 0; font-size: 0.95rem; color: var(--ink-soft); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.wiki a { align-self: start; font-weight: 700; color: var(--pen); text-decoration: none; border: 2px solid var(--line); border-radius: 10px; padding: 4px 12px; justify-self: start; }
+.wiki a:hover { border-color: var(--pen); }
+.wiki.has-img a { grid-column: 2; }
 .links { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .links a { display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; min-width: 0; }
 .links a:hover { border-color: var(--pen); }
@@ -847,6 +870,71 @@ var EMBEDDED_KEY = "";
     card.hidden = !list.length;
     list.forEach(([name, url, desc]) => { const a = el("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.appendChild(el("b", null, name)); a.appendChild(el("span", null, desc)); box.appendChild(a); });
   }
+  /* ---------- Wikipedia (canale aperto di Wikipedia, senza chiave) ---------- */
+  const WIKI = "https://it.wikipedia.org/";
+  function wikiSummary(title) {
+    return fetch(WIKI + "api/rest_v1/page/summary/" + encodeURIComponent(title.replace(/ /g, "_")), { headers: { "Accept": "application/json" } })
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null);
+  }
+  function wikiSearch(q) {
+    return fetch(WIKI + "w/api.php?action=query&list=search&format=json&origin=*&srlimit=6&srsearch=" + encodeURIComponent(q))
+      .then((r) => r.json()).then((j) => ((j.query && j.query.search) || []).map((x) => x.title)).catch(() => []);
+  }
+  function wikiCard(sum, why) {
+    const d = el("div", "wiki" + (sum.thumbnail ? " has-img" : ""));
+    if (sum.thumbnail) { const im = el("img"); im.src = sum.thumbnail.source; im.alt = ""; im.loading = "lazy"; d.appendChild(im); }
+    d.appendChild(el("b", null, sum.title));
+    if (why) d.appendChild(el("span", "why", why));
+    d.appendChild(el("p", null, sum.extract || sum.description || ""));
+    const a = el("a", null, "Leggi su Wikipedia"); a.href = (sum.content_urls && sum.content_urls.desktop && sum.content_urls.desktop.page) || (WIKI + "wiki/" + encodeURIComponent(sum.title)); a.target = "_blank"; a.rel = "noopener"; d.appendChild(a);
+    return d;
+  }
+  function wikiPanel(note) {
+    const det = el("details", "wikidet");
+    const sum = el("summary"); sum.appendChild(el("span", "wlogo", "W"));
+    const wt = el("span", "wt"); wt.appendChild(document.createTextNode("Wikipedia")); wt.appendChild(el("small", null, "Cosa dice su «" + note.title + "»")); sum.appendChild(wt); det.appendChild(sum);
+    const body = el("div", "wbody"); det.appendChild(body);
+    const msg = el("p", "hint"); const list = el("div", "wlist"); body.append(msg, list);
+    const more = el("div", "wmore"); more.appendChild(el("span", "lbl", "Vuoi cercare altro?"));
+    const row = el("div", "wsearch"); const q = el("input"); q.type = "text"; q.placeholder = "Scrivi cosa cercare su Wikipedia"; const go = el("button", "main", "Cerca"); go.type = "button"; row.append(q, go);
+    const again = el("button", "ghost", "Rifai la ricerca dagli appunti"); again.type = "button"; const rb = el("div", "btns"); rb.appendChild(again);
+    more.append(row, rb); body.appendChild(more);
+    let done = false, working = false;
+    function show(items) {
+      list.textContent = "";
+      if (!items.length) { msg.textContent = "Nessuna voce trovata. Prova con parole diverse."; return; }
+      msg.textContent = "Cerco le voci...";
+      return Promise.all(items.map((it) => wikiSummary(it.title).then((sm) => ({ sum: sm, why: it.why })))).then((res) => {
+        const ok = res.filter((r) => r.sum && r.sum.type !== "disambiguation" && (r.sum.extract || "").length > 20);
+        list.textContent = "";
+        if (!ok.length) { msg.textContent = "Non riesco a raggiungere Wikipedia in questo momento. Controlla internet e riprova."; return; }
+        msg.textContent = ok.length === 1 ? "1 voce trovata" : ok.length + " voci trovate";
+        ok.forEach((r) => list.appendChild(wikiCard(r.sum, r.why)));
+      });
+    }
+    function auto() {
+      if (!keyOk) { msg.textContent = "Per riconoscere gli argomenti dagli appunti serve la chiave Gemini (Impostazioni). Intanto puoi cercare quello che vuoi qui sotto."; return; }
+      if (working) return; working = true; again.disabled = true;
+      msg.textContent = "L'insegnante legge gli appunti e cerca gli argomenti..."; list.textContent = "";
+      const w = who();
+      const prompt = [
+        "Leggi questi appunti di " + curSubject.name + " («" + note.title + "») di " + w.desc + " e individua da 2 a 5 argomenti principali che hanno una voce sulla Wikipedia in italiano.",
+        "Per ciascuno scrivi il titolo ESATTO della voce di it.wikipedia.org (come compare nell'intestazione della pagina, es. «Repubblica romana», «Equazione di primo grado», «Fotosintesi clorofilliana») e una frase brevissima che dice perché c'entra con gli appunti.",
+        "Rispondi SOLO con un array JSON: [{\"titolo\": string, \"perche\": string}]."
+      ].join("\n");
+      askJSON([{ text: prompt }].concat(notesParts([note])), 0.2).then((arr) => {
+        working = false; again.disabled = false;
+        const items = (Array.isArray(arr) ? arr : []).filter((x) => x && typeof x.titolo === "string" && x.titolo.trim()).slice(0, 5).map((x) => ({ title: x.titolo.trim(), why: String(x.perche || "").trim() }));
+        return Promise.all(items.map((it) => wikiSummary(it.title).then((sm) => sm && sm.type !== "disambiguation" ? it : wikiSearch(it.title).then((t) => (t.length ? { title: t[0], why: it.why } : null))))).then((fixed) => show(fixed.filter(Boolean)));
+      }).catch((e) => { working = false; again.disabled = false; msg.textContent = explain(e); });
+    }
+    det.addEventListener("toggle", () => { if (det.open && !done) { done = true; auto(); } });
+    again.addEventListener("click", auto);
+    go.addEventListener("click", () => { const v = q.value.trim(); if (!v) { q.focus(); return; } msg.textContent = "Cerco su Wikipedia..."; list.textContent = ""; wikiSearch(v).then((titles) => show(titles.map((t) => ({ title: t, why: "" })))); });
+    q.addEventListener("keydown", (e) => { if (e.key === "Enter") go.click(); });
+    return det;
+  }
+
   function renderTools(sub) {
     const card = $("toolsCard"); card.textContent = ""; toolAttach.files = [];
     const k = kindOf(sub); const w = who();
@@ -1004,6 +1092,7 @@ var EMBEDDED_KEY = "";
       b.appendChild(g2); b.appendChild(el("span", "arrow", "›"));
       b.addEventListener("click", () => openNote(n.id));
       list.appendChild(b);
+      list.appendChild(wikiPanel(n));
     });
     // ripassi fatti: data e argomento
     const sl = $("sessList"); sl.textContent = "";
