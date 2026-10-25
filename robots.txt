@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://jackc-interrogami.github.io/Interrogami/sitemap.xml
