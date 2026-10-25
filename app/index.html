@@ -1,0 +1,1617 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#3b5bdb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Interrogami">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Interrogami</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.css">
+<style>
+/* Quaderno a quadretti: una colonna, barra di navigazione in basso come un'app */
+:root {
+  --paper: #f4f7fc; --grid: #dbe4f3; --ink: #1d2a4d; --ink-soft: #55628a; --card: #ffffff; --line: #c9d5ec;
+  --pen: #3b5bdb; --pen-ink: #ffffff; --marker: #ffd43b;
+  --good: #2b9348; --good-bg: #e3f6e8; --bad: #c2374a; --bad-bg: #fde6e9; --warn: #b7791f; --warn-bg: #fff3d6;
+  --quote-bg: #fff8dc; --quote-line: #e6c94f;
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --nav-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #131a2e; --grid: #1c2542; --ink: #e8edfb; --ink-soft: #9aa7cc; --card: #1b2440; --line: #2e3a63;
+    --pen: #7c97ff; --pen-ink: #0f1630; --marker: #e0b92a;
+    --good: #6fdc8c; --good-bg: #17331f; --bad: #ff8a9a; --bad-bg: #3d1a22; --warn: #ffc966; --warn-bg: #3a2d12;
+    --quote-bg: #3a3314; --quote-line: #a8902c;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { height: 100%; }
+body {
+  margin: 0; min-height: 100%;
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 24px 24px;
+  color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: calc(16px + env(safe-area-inset-top, 0px)) calc(var(--nav-h) + 24px + env(safe-area-inset-bottom, 0px));
+}
+main { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 2rem; margin: 0; line-height: 1.1; }
+h1 span { background: linear-gradient(transparent 58%, var(--marker) 58%, var(--marker) 92%, transparent 92%); padding: 0 4px; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.35rem; margin: 0; line-height: 1.2; text-wrap: balance; }
+h3 { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; margin: 0; }
+.sub { margin: 4px 0 0; color: var(--ink-soft); }
+.card { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+label, .lbl { font-family: var(--font-display); font-weight: 500; font-size: 1rem; }
+textarea, select, input[type=text], input[type=password] { width: 100%; font: inherit; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+textarea { min-height: 120px; resize: vertical; }
+textarea:focus, select:focus, input:focus, button:focus-visible { outline: 3px solid var(--pen); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 12px; }
+.row > div { flex: 1 1 180px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button.main { font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; background: var(--pen); color: var(--pen-ink); border: 0; border-radius: 12px; padding: 12px 20px; cursor: pointer; }
+button.main:disabled { opacity: 0.5; cursor: not-allowed; }
+button.ghost { font: inherit; font-weight: 700; color: var(--ink-soft); background: transparent; border: 2px solid var(--line); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+button.ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+button.danger { color: var(--bad); border-color: var(--bad); }
+.hint { font-size: 0.9rem; color: var(--ink-soft); margin: 0; }
+.hint a { color: var(--pen); }
+.ok { color: var(--good); font-weight: 700; }
+.err { color: var(--bad); font-weight: 700; }
+.check { display: flex; gap: 10px; align-items: flex-start; }
+.check input { width: 20px; height: 20px; margin-top: 3px; flex: none; accent-color: var(--pen); }
+.check label { font-family: var(--font-body); font-weight: 700; }
+[hidden] { display: none !important; }
+.chip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; flex: none; border-radius: 999px; padding: 3px 12px; font-weight: 700; font-size: 0.85rem; background: var(--paper); border: 2px solid var(--line); }
+.chip.ok { background: var(--good-bg); color: var(--good); border-color: transparent; }
+.chip.no { background: var(--bad-bg); color: var(--bad); border-color: transparent; }
+.chip.mid { background: var(--warn-bg); color: var(--warn); border-color: transparent; }
+.dot { width: 12px; height: 12px; border-radius: 50%; flex: none; display: inline-block; }
+
+/* barra di navigazione */
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; background: var(--card); border-top: 2px solid var(--line);
+  padding-left: max(8px, env(safe-area-inset-left, 0px)); padding-right: max(8px, env(safe-area-inset-right, 0px)); padding-bottom: env(safe-area-inset-bottom, 0px); }
+nav.tabs > div { max-width: 720px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); height: var(--nav-h); }
+nav.tabs button { font-family: var(--font-display); font-weight: 500; font-size: 0.85rem; color: var(--ink-soft); background: none; border: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; min-width: 0; }
+nav.tabs button svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+nav.tabs button.on { color: var(--pen); }
+nav.tabs button.on::after { content: ""; width: 28px; height: 4px; border-radius: 4px; background: var(--marker); }
+
+/* liste */
+.list { display: flex; flex-direction: column; gap: 10px; }
+.item { display: flex; gap: 12px; align-items: center; background: var(--card); border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; text-align: left; font: inherit; color: var(--ink); cursor: pointer; width: 100%; }
+.item:hover { border-color: var(--pen); }
+.item .grow { flex: 1 1 auto; min-width: 0; }
+.item .t { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; overflow-wrap: anywhere; }
+.item .m { font-size: 0.85rem; color: var(--ink-soft); }
+.item .arrow { color: var(--ink-soft); flex: none; }
+.empty { color: var(--ink-soft); font-style: italic; margin: 0; }
+.pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.pick label { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-body); font-weight: 700; font-size: 0.95rem; background: var(--paper); border: 2px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.pick input { accent-color: var(--pen); width: 18px; height: 18px; margin: 0; }
+.pick label.on { border-color: var(--pen); }
+.seg { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.seg button { font: inherit; font-weight: 700; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 10px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; text-align: left; }
+.seg button small { font-weight: 400; color: var(--ink-soft); font-size: 0.8rem; line-height: 1.3; }
+.seg button.on { border-color: var(--pen); background: var(--card); box-shadow: inset 0 0 0 1px var(--pen); }
+.attach { display: flex; flex-wrap: wrap; gap: 6px; }
+.attach span { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; background: var(--paper); border: 2px solid var(--line); border-radius: 999px; padding: 3px 6px 3px 10px; max-width: 100%; }
+.attach span em { font-style: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.attach button { font: inherit; border: 0; background: transparent; color: var(--bad); cursor: pointer; padding: 0 4px; font-weight: 700; }
+
+/* quiz */
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.prog { font-family: var(--font-display); font-weight: 500; }
+.score { display: flex; gap: 8px; flex-wrap: wrap; }
+.stage { perspective: 1400px; }
+.page {
+  background: var(--card); border: 2px solid var(--line); border-radius: 6px 16px 16px 6px; border-left: 8px solid var(--pen);
+  padding: 20px; display: flex; flex-direction: column; gap: 16px; min-height: 320px;
+  transform-origin: left center; backface-visibility: hidden; box-shadow: 4px 6px 0 var(--grid);
+}
+.page.flip-out { animation: flipOut 0.4s ease-in forwards; }
+.page.flip-in { animation: flipIn 0.4s ease-out; }
+@keyframes flipOut { to { transform: rotateY(-100deg); opacity: 0; } }
+@keyframes flipIn { from { transform: translateX(28px) rotateY(18deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .page.flip-out, .page.flip-in { animation: none; } }
+.qnum { font-size: 0.85rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+.q { font-family: var(--font-display); font-weight: 500; font-size: 1.3rem; line-height: 1.3; margin: 0; overflow-wrap: anywhere; }
+.q .blank { display: inline-block; min-width: 90px; border-bottom: 3px solid var(--pen); margin: 0 4px; }
+.opts { display: flex; flex-direction: column; gap: 10px; }
+.opt { display: flex; gap: 12px; align-items: flex-start; text-align: left; font: inherit; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 10px 14px; cursor: pointer; width: 100%; }
+.opt:hover:not(:disabled) { border-color: var(--pen); }
+.opt .L { flex: none; font-family: var(--font-display); font-weight: 600; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--card); border: 2px solid var(--line); }
+.opt span.T { min-width: 0; overflow-wrap: anywhere; padding-top: 2px; }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--good); background: var(--good-bg); }
+.opt.wrong { border-color: var(--bad); background: var(--bad-bg); }
+.tf { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tf .opt { justify-content: center; font-family: var(--font-display); font-size: 1.2rem; }
+.result { font-family: var(--font-display); font-weight: 600; font-size: 1.4rem; border-radius: 10px; padding: 8px 16px; align-self: flex-start; }
+.result.yes { background: var(--good-bg); color: var(--good); }
+.result.no { background: var(--bad-bg); color: var(--bad); }
+.result.mid { background: var(--warn-bg); color: var(--warn); }
+.notes-label { font-weight: 700; margin: 0; }
+blockquote.notes { margin: 0; padding: 12px 16px; background: var(--quote-bg); border-left: 5px solid var(--quote-line); border-radius: 6px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.expl { margin: 0; overflow-wrap: anywhere; }
+.page textarea { min-height: 100px; }
+.flash { background: var(--quote-bg); border: 2px dashed var(--quote-line); border-radius: 12px; padding: 16px; font-size: 1.15rem; overflow-wrap: anywhere; }
+.final-list { display: flex; flex-direction: column; gap: 12px; }
+.final-item { border-top: 2px dashed var(--line); padding-top: 10px; }
+.big { font-family: var(--font-display); font-weight: 600; font-size: 2rem; margin: 0; }
+.loading { color: var(--ink-soft); font-style: italic; margin: 0; }
+ul.plain { margin: 0; padding-left: 20px; }
+ul.plain li { overflow-wrap: anywhere; }
+
+/* home: una scheda per materia, fiamma dei giorni di fila e voto in decimi */
+.sub-card.link { cursor: pointer; text-align: left; font: inherit; color: var(--ink); width: 100%; }
+.sub-card.link:hover { border-color: var(--pen); }
+.sub-stats { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center; }
+.sub-stats .meta { grid-column: 1 / -1; font-size: 0.9rem; color: var(--ink-soft); }
+.reg { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.reg .top { display: flex; gap: 12px; align-items: center; }
+.reg .top .grow { flex: 1 1 auto; min-width: 0; }
+.reg .top .t { font-family: var(--font-display); font-weight: 500; font-size: 1.05rem; overflow-wrap: anywhere; }
+.reg .top .m { font-size: 0.85rem; color: var(--ink-soft); }
+.reg .voto { width: 64px; height: 64px; border-width: 4px; }
+.reg .voto b { font-size: 1.4rem; }
+.reg .voto small { font-size: 0.6rem; }
+.reg .note { margin: 0; padding: 10px 14px; background: var(--quote-bg); border-left: 5px solid var(--quote-line); border-radius: 6px; overflow-wrap: anywhere; font-style: italic; }
+.reg .ok-list, .reg .no-list { margin: 0; padding-left: 20px; font-size: 0.95rem; }
+.reg .ok-list li::marker { color: var(--good); } .reg .no-list li::marker { color: var(--bad); }
+.reg .lab { font-weight: 700; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 0 0; }
+.reg .lab.g { color: var(--good); } .reg .lab.b { color: var(--bad); }
+.reg details summary { cursor: pointer; font-weight: 700; color: var(--pen); font-size: 0.9rem; }
+.subs { display: flex; flex-direction: column; gap: 12px; }
+.sub-card { background: var(--card); border: 2px solid var(--line); border-radius: 14px; padding: 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; align-items: center; min-width: 0; animation: popIn 0.45s cubic-bezier(.2,.9,.3,1.3) both; }
+.sub-card:nth-child(2) { animation-delay: 0.08s; } .sub-card:nth-child(3) { animation-delay: 0.16s; } .sub-card:nth-child(4) { animation-delay: 0.24s; } .sub-card:nth-child(n+5) { animation-delay: 0.3s; }
+@keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: none; opacity: 1; } }
+.sub-card .name { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; min-width: 0; overflow-wrap: anywhere; grid-column: 1 / -1; }
+.sub-card .meta { font-size: 0.85rem; color: var(--ink-soft); grid-column: 1 / -1; }
+.streak { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.streak svg { width: 48px; height: 56px; flex: none; transform-origin: 50% 90%; }
+.streak.on svg { animation: flick 1.1s ease-in-out infinite alternate; }
+.streak .f-out { fill: #ff922b; } .streak .f-in { fill: #ffd43b; }
+.streak.off .f-out { fill: var(--line); } .streak.off .f-in { fill: var(--paper); }
+.streak.on .f-out { filter: drop-shadow(0 0 6px rgba(255,146,43,0.55)); }
+@keyframes flick { 0% { transform: scale(1) rotate(-2deg); } 50% { transform: scale(1.06, 1.1) rotate(1deg); } 100% { transform: scale(0.98, 1.03) rotate(-1deg); } }
+.streak b { font-family: var(--font-display); font-weight: 600; font-size: 2rem; line-height: 1; font-variant-numeric: tabular-nums; display: block; }
+.streak.on b { color: #e8590c; animation: bump 0.6s cubic-bezier(.2,.9,.3,1.4) 0.3s both; }
+@keyframes bump { 0% { transform: scale(0.4); opacity: 0; } 60% { transform: scale(1.25); opacity: 1; } 100% { transform: none; } }
+.streak small { display: block; font-size: 0.8rem; color: var(--ink-soft); font-weight: 700; }
+.voto { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 86px; height: 86px; border-radius: 50%; border: 5px solid var(--line); background: var(--paper); flex: none; }
+.voto b { font-family: var(--font-display); font-weight: 600; font-size: 1.8rem; line-height: 1; font-variant-numeric: tabular-nums; }
+.voto small { font-size: 0.7rem; font-weight: 700; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.06em; }
+.voto.ok { border-color: var(--good); } .voto.ok b { color: var(--good); }
+.voto.mid { border-color: var(--warn); } .voto.mid b { color: var(--warn); }
+.voto.no { border-color: var(--bad); } .voto.no b { color: var(--bad); }
+.voto.none b { color: var(--ink-soft); font-size: 1.2rem; }
+@media (prefers-reduced-motion: reduce) { .sub-card, .streak.on svg, .streak.on b { animation: none; } }
+.mic { font: inherit; font-weight: 700; color: var(--pen); background: transparent; border: 2px solid var(--line); border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+.mic.rec { color: var(--bad); border-color: var(--bad); }
+.toast { position: fixed; left: 50%; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 18px; border-radius: 999px; font-weight: 700; z-index: 30; max-width: calc(100% - 32px); text-align: center; }
+/* strumenti della materia (lingue, latino/greco, matematica, fisica, chimica) */
+.tools .md { overflow-wrap: anywhere; display: flex; flex-direction: column; gap: 8px; }
+.tools .md h1, .tools .md h2, .tools .md h3 { font-family: var(--font-display); font-weight: 600; font-size: 1.1rem; margin: 6px 0 0; }
+.tools .md p, .tools .md ul, .tools .md ol { margin: 0; }
+.tools .md ul, .tools .md ol { padding-left: 22px; }
+.tools .md code { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; font-size: 0.95em; }
+.tools .md pre { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px; overflow-x: auto; margin: 0; }
+.tools .md table { border-collapse: collapse; font-size: 0.95rem; }
+.tools .md td, .tools .md th { border: 1px solid var(--line); padding: 4px 8px; text-align: left; vertical-align: top; }
+.tools .md .katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+.tools .out { background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 14px; }
+.warnban { background: var(--warn-bg); border: 2px solid var(--warn); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.warnban p { margin: 0; color: var(--warn); font-weight: 700; }
+.warnban .why { color: var(--ink-soft); font-weight: 400; font-size: 0.9rem; }
+.warnban .links { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+.tools .tag { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--pen); margin: 0; }
+.links { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.links a { display: flex; flex-direction: column; gap: 2px; text-decoration: none; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: 8px 12px; min-width: 0; }
+.links a:hover { border-color: var(--pen); }
+.links a b { font-family: var(--font-display); font-weight: 500; font-size: 1rem; color: var(--pen); overflow-wrap: anywhere; }
+.links a span { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.3; }
+.kinds { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; }
+.kinds button { font: inherit; font-weight: 700; font-size: 0.9rem; color: var(--ink); background: var(--paper); border: 2px solid var(--line); border-radius: 10px; padding: 8px 6px; cursor: pointer; min-width: 0; }
+.kinds button.on { border-color: var(--pen); box-shadow: inset 0 0 0 1px var(--pen); background: var(--card); }
+.modal { position: fixed; left: 16px; right: 16px; top: 8%; z-index: 40; max-width: 520px; margin: 0 auto; box-shadow: 0 12px 40px rgba(0,0,0,0.35); max-height: 84vh; overflow-y: auto; }
+details.settings summary { cursor: pointer; font-family: var(--font-display); font-weight: 500; }
+details.settings > div { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <header id="hdr">
+    <h1>Interrogami<span>!</span></h1>
+    <p class="sub" id="greet">Tieni accesa la fiamma di ogni materia: un'interrogazione al giorno.</p>
+  </header>
+
+  <!-- ===================== STUDIA ===================== -->
+  <section id="v-studia" class="view">
+    <div class="card" id="setup">
+      <div class="field">
+        <span class="lbl">Da quali appunti?</span>
+        <div class="row">
+          <div>
+            <label for="qSubject">Materia</label>
+            <select id="qSubject"></select>
+          </div>
+        </div>
+        <div class="pick" id="qNotes"></div>
+        <p class="hint" id="qNotesHint"></p>
+      </div>
+      <div class="field">
+        <span class="lbl">Tipo di esercizio</span>
+        <div class="seg" id="modes">
+          <button type="button" data-mode="mc" class="on">Scelta multipla<small>4 risposte, una giusta</small></button>
+          <button type="button" data-mode="tf">Vero o falso<small>decidi se la frase è vera</small></button>
+          <button type="button" data-mode="cloze">Completa la frase<small>trova la parola che manca</small></button>
+          <button type="button" data-mode="open">Risposta aperta<small>rispondi con parole tue</small></button>
+          <button type="button" data-mode="flash">Flashcard<small>ripasso veloce domanda e risposta</small></button>
+          <button type="button" data-mode="oral">Ripeti la lezione<small>racconti tutto, ti dico cosa manca</small></button>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="n">Quante domande?</label>
+          <select id="n"><option value="5">5 domande</option><option value="8" selected>8 domande</option><option value="12">12 domande</option></select>
+        </div>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="solo" checked>
+        <div>
+          <label for="solo">Solo dagli appunti</label>
+          <p class="hint">Domande e correzioni si basano solo su quello che c'è scritto negli appunti. Se lo togli, l'insegnante può aggiungere altre cose che sa.</p>
+        </div>
+      </div>
+      <div class="btns"><button class="main" id="start" type="button" disabled>Inizia l'interrogazione</button></div>
+      <p class="hint" id="startHint"></p>
+    </div>
+  </section>
+
+  <!-- ===================== QUIZ ===================== -->
+  <section id="v-quiz" class="view" hidden>
+    <div class="bar">
+      <div class="prog" id="prog"></div>
+      <div class="score" id="score"></div>
+      <button class="ghost" id="finish" type="button">Termina</button>
+    </div>
+    <div class="stage" style="margin-top:12px"><article class="page" id="page" aria-live="polite"></article></div>
+  </section>
+
+  <!-- ===================== HOME (materie con fiamma) ===================== -->
+  <section id="v-home" class="view" hidden>
+    <div class="card" id="welcome" hidden>
+      <h2>Benvenuto in Interrogami</h2>
+      <p class="expl">Tre passi e sei pronto:</p>
+      <ol class="plain" style="display:flex;flex-direction:column;gap:6px">
+        <li><b>La tua chiave Gemini</b> (gratis, un minuto): vai in <b>Impostazioni</b>, scrivi il tuo nome e la classe, crea la chiave su <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a> e incollala. Resta solo su questo telefono.</li>
+        <li><b>Crea una materia</b> con «+ Nuova materia» (scegli anche il tipo: lingua, latino, matematica...).</li>
+        <li><b>Salva gli appunti</b> nella materia (testo, foto del libro, PDF, Word) e vai su <b>Studia</b> per farti interrogare.</li>
+      </ol>
+      <p class="hint">Tutto quello che salvi resta solo su questo telefono: nessun altro lo vede.</p>
+      <div class="btns"><button class="main" id="goSettings" type="button">Vai alle Impostazioni</button><button class="ghost" id="hideWelcome" type="button">Ho capito</button></div>
+    </div>
+    <div class="card">
+      <div class="bar">
+        <h2>Le mie materie</h2>
+        <button class="ghost" id="addSubject" type="button">+ Nuova materia</button>
+      </div>
+      <div class="subs" id="subCards"></div>
+      <p class="empty" id="homeEmpty" hidden>Nessuna materia. Crea la prima con «+ Nuova materia», poi salva gli appunti e fai la prima interrogazione.</p>
+    </div>
+  </section>
+
+  <section id="v-materia" class="view" hidden>
+    <div class="card">
+      <div class="bar">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0"><span class="dot" id="sDot"></span><h2 id="sName"></h2></div>
+        <div class="btns">
+          <button class="ghost" id="backSubjects" type="button">← Materie</button>
+          <button class="ghost" id="renameSubject" type="button">Rinomina</button>
+          <button class="ghost danger" id="delSubject" type="button">Elimina</button>
+        </div>
+      </div>
+      <div class="sub-stats" id="sStats"></div>
+    </div>
+    <div class="card tools" id="toolsCard" hidden></div>
+    <div class="card" id="linksCard" hidden>
+      <h3>Siti utili per questa materia</h3>
+      <p class="hint">Strumenti famosi che vanno a braccetto con l'insegnante IA: si aprono fuori dall'app, in una nuova scheda.</p>
+      <div class="links" id="linksList"></div>
+    </div>
+    <div class="card">
+      <div class="bar">
+        <h3>Appunti salvati</h3>
+        <button class="main" id="addNote" type="button">+ Nuovi appunti</button>
+      </div>
+      <div class="list" id="noteList"></div>
+    </div>
+    <div class="card">
+      <div class="bar">
+        <h3>Ripassi fatti</h3>
+        <button class="ghost" id="studyThis" type="button">Interrogami su questa</button>
+      </div>
+      <div class="list" id="sessList"></div>
+    </div>
+    <div class="card" id="reviewCard" hidden>
+      <div class="bar">
+        <h3>Da ripassare</h3>
+        <button class="main" id="reviewBtn" type="button">Ripassa gli errori</button>
+      </div>
+      <p class="hint">Le domande sbagliate nelle ultime interrogazioni di questa materia. «Ripassa gli errori» prepara un quiz nuovo proprio su questi punti.</p>
+      <div class="list" id="reviewList"></div>
+    </div>
+  </section>
+
+  <section id="v-nota" class="view" hidden>
+    <div class="card">
+      <div class="bar">
+        <h2 id="nTitleHdr">Appunti</h2>
+        <button class="ghost" id="backNotes" type="button">← Indietro</button>
+      </div>
+      <div class="field">
+        <label for="nTitle">Titolo (capitolo o argomento)</label>
+        <input type="text" id="nTitle" placeholder="Es. La Repubblica romana">
+      </div>
+      <div class="field">
+        <label for="nText">Testo degli appunti</label>
+        <textarea id="nText" placeholder="Scrivi o incolla il riassunto, il paragrafo del libro, le cose dette dalla prof..."></textarea>
+        <div class="btns"><button class="mic" id="micNote" type="button" hidden>🎤 Detta</button></div>
+      </div>
+      <div class="field">
+        <label for="nFile">Allega PDF, Word, foto o testo</label>
+        <input type="file" id="nFile" multiple accept=".pdf,.docx,.txt,.md,.jpg,.jpeg,.png,.webp,image/*,application/pdf">
+        <p class="hint" id="nFileMsg">Vanno bene PDF, Word (.docx), foto del libro o del quaderno (anche scattate ora col telefono), scansioni e file di testo. Le foto e i PDF restano allegati e Gemini li legge direttamente; dai Word e dai testi viene copiato il contenuto nel riquadro sopra.</p>
+        <div class="attach" id="nAttach"></div>
+      </div>
+      <div class="btns">
+        <button class="main" id="saveNote" type="button">Salva appunti</button>
+        <button class="ghost danger" id="delNote" type="button" hidden>Elimina</button>
+        <span class="hint" id="nMsg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REGISTRO ===================== -->
+  <section id="v-registro" class="view" hidden>
+    <div class="card">
+      <h2>Registro</h2>
+      <p class="hint">Un voto per ogni interrogazione, con le note dell'insegnante su cosa è andato bene e cosa è da rivedere.</p>
+      <p class="empty" id="regEmpty" hidden>Il registro è ancora vuoto: fai la prima interrogazione!</p>
+    </div>
+    <div class="list" id="regList"></div>
+  </section>
+
+  <!-- ===================== IMPOSTAZIONI ===================== -->
+  <section id="v-impostazioni" class="view" hidden>
+    <div class="card">
+      <h2>Chi studia?</h2>
+      <div class="row">
+        <div>
+          <label for="sName2">Nome</label>
+          <input type="text" id="sName2" placeholder="Il tuo nome">
+        </div>
+        <div>
+          <label for="gender">Sei</label>
+          <select id="gender"><option value="f">una ragazza</option><option value="m">un ragazzo</option></select>
+        </div>
+        <div>
+          <label for="grade">Classe</label>
+          <select id="grade"><option>1ª elementare</option><option>2ª elementare</option><option>3ª elementare</option><option>4ª elementare</option><option>5ª elementare</option><option>1ª media</option><option>2ª media</option><option>3ª media</option><option>1ª superiore</option><option>2ª superiore</option><option>3ª superiore</option><option>4ª superiore</option><option>5ª superiore</option></select>
+        </div>
+      </div>
+      <p class="hint">L'insegnante usa il nome e la classe per parlarti nel modo giusto.</p>
+    </div>
+    <div class="card" id="keyCard">
+      <h2>Chiave Gemini</h2>
+      <p class="hint">Serve una chiave gratuita di Google. Si crea in un minuto su <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a>. Incollala qui: resta salvata solo su questo telefono o computer.</p>
+      <div class="field">
+        <label for="key">Chiave API</label>
+        <input type="password" id="key" autocomplete="off" placeholder="Incolla qui la chiave">
+      </div>
+      <div class="field">
+        <label for="model">Modello</label>
+        <select id="model"><option value="gemini-2.5-flash">gemini-2.5-flash</option></select>
+      </div>
+      <div class="btns">
+        <button class="main" id="saveKey" type="button">Salva e controlla</button>
+        <span id="keyMsg" class="hint"></span>
+      </div>
+    </div>
+    <div class="card">
+      <h2>I miei dati</h2>
+      <p class="hint">Materie, appunti e storico restano salvati solo in questo browser. Con il backup li porti su un altro dispositivo.</p>
+      <div class="btns">
+        <button class="ghost" id="exportBtn" type="button">Scarica backup</button>
+        <label class="ghost" for="importFile" style="cursor:pointer">Carica backup</label>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
+        <button class="ghost danger" id="wipeBtn" type="button">Cancella materie e registro</button>
+        <button class="ghost danger" id="resetBtn" type="button">Azzera tutto (anche nome e chiave)</button>
+      </div>
+      <p class="hint" id="dataMsg"></p>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="Sezioni">
+  <div>
+    <button type="button" data-view="home" class="on"><svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Materie</button>
+    <button type="button" data-view="studia"><svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Studia</button>
+    <button type="button" data-view="registro"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Registro</button>
+    <button type="button" data-view="impostazioni"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Impostazioni</button>
+  </div>
+</nav>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.11/contrib/auto-render.min.js"></script>
+<script>
+/* ============================================================
+   CHIAVE GEMINI DEL PROPRIETARIO
+   Se scrivi qui la chiave (tra le virgolette), l'app parte subito
+   senza chiederla. ATTENZIONE: se il sito è pubblico chiunque apra
+   il codice della pagina può leggerla. Meglio lasciare vuoto e
+   inserirla una volta nelle Impostazioni di ogni telefono.
+   ============================================================ */
+var EMBEDDED_KEY = "";
+
+(function () {
+  "use strict";
+  const API = "https://generativelanguage.googleapis.com/v1beta/";
+  const MAX_ATTACH_BYTES = 14 * 1024 * 1024;
+  const COLORS = ["#3b5bdb", "#e8590c", "#2b9348", "#9c36b5", "#c2255c", "#0c8599", "#b7791f", "#5c5f66"];
+  const MODE_NAMES = { mc: "Scelta multipla", tf: "Vero o falso", cloze: "Completa la frase", open: "Risposta aperta", flash: "Flashcard", oral: "Ripeti la lezione" };
+  const $ = (id) => document.getElementById(id);
+  const EMBEDDED = !!(EMBEDDED_KEY && EMBEDDED_KEY.trim());
+  const getKey = () => (EMBEDDED ? EMBEDDED_KEY.trim() : $("key").value.trim());
+
+  let keyOk = false, busy = false, mode = "mc";
+  let subjects = [], notes = [], sessions = [];
+  let curSubject = null, curNote = null, noteAttach = [];
+  let quiz = null;
+  let reviewPlan = null; // {subjectId, noteIds, points:[...]} per "Ripassa gli errori"
+
+  /* ---------- utilità ---------- */
+  const store = (k, v) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) {} };
+  const load = (k) => { try { return localStorage.getItem(k) || ""; } catch (e) { return ""; } };
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function fmtDate(ts) { const d = new Date(ts); return d.toLocaleDateString("it-IT", { day: "numeric", month: "short" }) + " " + d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }); }
+  let toastT = null;
+  function toast(msg) { let t = document.querySelector(".toast"); if (!t) { t = el("div", "toast"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2600); }
+  function pct(s) { if (s.mode === "oral" && s.voto) return s.voto * 10; return s.total ? Math.round(100 * s.right / s.total) : 0; }
+  function who() {
+    const name = load("i2_name").trim(); const g = load("i2_gender") || "f"; const grade = load("i2_grade") || "1ª media";
+    const elem = /elementare/.test(grade), sup = /superiore/.test(grade);
+    const school = elem ? "scuola elementare" : sup ? "scuola superiore" : "scuola media";
+    const kid = elem ? (g === "m" ? "un bambino" : "una bambina") : (g === "m" ? "un ragazzo" : "una ragazza");
+    const style = elem ? "Scrivi in italiano molto semplice, con frasi corte, come si parla a un bambino delle elementari." : sup ? "Scrivi in italiano chiaro e preciso, adatto a uno studente delle superiori: puoi usare i termini tecnici della materia." : "Scrivi in italiano semplice.";
+    return { name, g, grade, school, style, desc: kid + " di " + grade + (name ? " che si chiama " + name : ""), pron: elem ? (g === "m" ? "del bambino" : "della bambina") : (g === "m" ? "del ragazzo" : "della ragazza") };
+  }
+
+  /* ---------- IndexedDB ---------- */
+  let db = null;
+  function openDB() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("interrogami2", 1);
+      r.onupgradeneeded = () => { const d = r.result; ["subjects", "notes", "sessions"].forEach((s) => { if (!d.objectStoreNames.contains(s)) d.createObjectStore(s, { keyPath: "id" }); }); };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+  }
+  function tx(storeName, modeName, fn) {
+    return new Promise((res, rej) => {
+      if (!db) return rej(new Error("no db"));
+      const t = db.transaction(storeName, modeName), s = t.objectStore(storeName);
+      const req = fn(s);
+      t.oncomplete = () => res(req && req.result);
+      t.onerror = () => rej(t.error);
+    });
+  }
+  const dbAll = (s) => tx(s, "readonly", (st) => st.getAll());
+  const dbPut = (s, o) => tx(s, "readwrite", (st) => st.put(o));
+  const dbDel = (s, id) => tx(s, "readwrite", (st) => st.delete(id));
+  const dbClear = (s) => tx(s, "readwrite", (st) => st.clear());
+  function reloadAll() {
+    return Promise.all([dbAll("subjects"), dbAll("notes"), dbAll("sessions")]).then((r) => {
+      subjects = (r[0] || []).sort((a, b) => a.name.localeCompare(b.name, "it"));
+      notes = (r[1] || []).sort((a, b) => b.updated - a.updated);
+      sessions = (r[2] || []).sort((a, b) => b.date - a.date);
+    });
+  }
+  const subjectById = (id) => subjects.find((s) => s.id === id);
+  const notesOf = (sid) => notes.filter((n) => n.subjectId === sid);
+
+  /* ---------- navigazione ---------- */
+  const VIEWS = ["home", "studia", "quiz", "materia", "nota", "registro", "impostazioni"];
+  function show(view) {
+    VIEWS.forEach((v) => { $("v-" + v).hidden = v !== view; });
+    const tab = view === "quiz" ? "studia" : (view === "materia" || view === "nota") ? "home" : view;
+    document.querySelectorAll("nav.tabs button").forEach((b) => b.classList.toggle("on", b.dataset.view === tab));
+    $("hdr").hidden = view === "quiz";
+    window.scrollTo({ top: 0 });
+    if (view === "studia") renderSetup();
+    if (view === "home") renderHome();
+    if (view === "registro") renderRegistro();
+  }
+  document.querySelectorAll("nav.tabs button").forEach((b) => b.addEventListener("click", () => {
+    if (quiz && !quiz.finished && b.dataset.view === "studia") { show("quiz"); return; }
+    show(b.dataset.view);
+  }));
+
+  /* ---------- Gemini ---------- */
+  function gemini(path, body, method) {
+    const opts = { method: method || "POST", headers: { "x-goog-api-key": getKey() } };
+    if (body) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+    return fetch(API + path, opts).then((r) =>
+      r.json().catch(() => ({})).then((j) => {
+        if (!r.ok) { const e = new Error((j.error && j.error.message) || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        return j;
+      })
+    );
+  }
+  function explain(e) {
+    const s = e && e.status;
+    if (s === 400 && /API key/i.test(e.message)) return "La chiave non è valida.";
+    if (s === 401 || s === 403) return "La chiave non è accettata o non ha i permessi.";
+    if (s === 404) return "Il modello scelto non esiste.";
+    if (s === 429) return "Le richieste gratuite di questo minuto o di oggi sono finite. Aspetta un po' e riprova.";
+    if (s === 413 || (e && /too large|exceeds/i.test(e.message || ""))) return "Gli appunti sono troppo grandi. Prova con meno file o meno pagine.";
+    if (s >= 500) return "Il servizio di Google ha un problema in questo momento. Riprova tra poco.";
+    if (e && e.custom) return e.message;
+    return "Non riesco a collegarmi. Controlla internet. (" + ((e && e.message) || "errore") + ")";
+  }
+  function fail(msg) { const e = new Error(msg); e.custom = true; return e; }
+  function askJSON(parts, temperature) {
+    const body = { contents: [{ role: "user", parts }], generationConfig: { temperature: temperature == null ? 0.7 : temperature, responseMimeType: "application/json" } };
+    return gemini("models/" + $("model").value + ":generateContent", body).then((j) => {
+      const c = j.candidates && j.candidates[0];
+      const text = c && c.content && c.content.parts ? c.content.parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("") : "";
+      if (!text.trim()) throw fail("Gemini non ha risposto (" + ((j.promptFeedback && j.promptFeedback.blockReason) || (c && c.finishReason) || "risposta vuota") + "). Riprova.");
+      try { return JSON.parse(text); } catch (e) {}
+      const a = text.search(/[\[{]/), b = Math.max(text.lastIndexOf("]"), text.lastIndexOf("}"));
+      try { return JSON.parse(text.slice(a, b + 1)); } catch (e) { throw fail("La risposta di Gemini non era leggibile. Riprova."); }
+    });
+  }
+
+  /* ---------- chiave e modelli ---------- */
+  function fillModels(list, keep) { const sel = $("model"); sel.textContent = ""; list.forEach((m) => { const o = document.createElement("option"); o.value = m; o.textContent = m; sel.appendChild(o); }); if (keep && list.indexOf(keep) >= 0) sel.value = keep; }
+  function pickDefault(list) {
+    const stable = list.filter((m) => !/preview|exp|image|tts|live|audio|thinking|robotics|computer/.test(m));
+    for (const re of [/flash-lite/, /flash/]) { const hit = stable.filter((m) => re.test(m)); if (hit.length) return hit[hit.length - 1]; }
+    return list[0];
+  }
+  function checkKey() {
+    const msg = $("keyMsg");
+    if (!getKey()) { msg.className = "hint err"; msg.textContent = "Incolla prima la chiave."; return Promise.resolve(); }
+    msg.className = "hint"; msg.textContent = "Controllo...";
+    return gemini("models?pageSize=200", null, "GET").then((j) => {
+      const names = (j.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf("generateContent") >= 0 && /gemini/.test(m.name)).map((m) => m.name.replace(/^models\//, ""));
+      if (!names.length) throw new Error("nessun modello disponibile");
+      names.sort();
+      const saved = load("i2_model");
+      fillModels(names, saved);
+      if (!saved || names.indexOf(saved) < 0) $("model").value = pickDefault(names);
+      if (!EMBEDDED) { store("i2_key", getKey()); store("i2_model", $("model").value); }
+      keyOk = true;
+      msg.className = "hint ok"; msg.textContent = "Chiave valida. Modello: " + $("model").value + ".";
+      refresh();
+    }).catch((e) => {
+      keyOk = false;
+      msg.className = "hint err"; msg.textContent = explain(e);
+      refresh();
+    });
+  }
+  $("saveKey").addEventListener("click", checkKey);
+  $("model").addEventListener("change", () => { if (!EMBEDDED) store("i2_model", $("model").value); });
+  $("sName2").addEventListener("input", () => { store("i2_name", $("sName2").value); greet(); });
+  $("gender").addEventListener("change", () => store("i2_gender", $("gender").value));
+  $("grade").addEventListener("change", () => store("i2_grade", $("grade").value));
+  function greet() { const w = who(); $("greet").textContent = (w.name ? "Ciao " + w.name + "! " : "") + "Tieni accesa la fiamma di ogni materia: un'interrogazione al giorno."; }
+
+  /* ---------- dettatura (se il browser la supporta) ---------- */
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function attachMic(btn, ta) {
+    if (!SR) { btn.hidden = true; return; }
+    btn.hidden = false;
+    let rec = null;
+    btn.addEventListener("click", () => {
+      if (rec) { rec.stop(); return; }
+      rec = new SR(); rec.lang = "it-IT"; rec.continuous = true; rec.interimResults = false;
+      rec.onresult = (ev) => { let t = ""; for (let i = ev.resultIndex; i < ev.results.length; i++) if (ev.results[i].isFinal) t += ev.results[i][0].transcript + " "; if (t) ta.value = (ta.value.trim() ? ta.value.trim() + " " : "") + t.trim(); ta.dispatchEvent(new Event("input")); };
+      rec.onend = () => { rec = null; btn.classList.remove("rec"); btn.textContent = "🎤 Detta"; };
+      rec.onerror = () => { rec = null; btn.classList.remove("rec"); btn.textContent = "🎤 Detta"; toast("Il microfono non è disponibile"); };
+      try { rec.start(); btn.classList.add("rec"); btn.textContent = "■ Stop"; } catch (e) { rec = null; }
+    });
+  }
+  attachMic($("micNote"), $("nText"));
+
+  /* ---------- MATERIE ---------- */
+  function askName(title, initial) {
+    // finestra inline: niente prompt() (non funziona ovunque)
+    return new Promise((res) => {
+      const wrap = el("div", "card"); wrap.style.position = "fixed"; wrap.style.left = "16px"; wrap.style.right = "16px"; wrap.style.top = "20%"; wrap.style.zIndex = "40"; wrap.style.maxWidth = "480px"; wrap.style.margin = "0 auto"; wrap.style.boxShadow = "0 12px 40px rgba(0,0,0,0.35)";
+      wrap.appendChild(el("h3", null, title));
+      const inp = el("input"); inp.type = "text"; inp.value = initial || ""; inp.placeholder = "Es. Storia, Scienze, Inglese..."; inp.id = "askNameInput";
+      const row = el("div", "btns");
+      const ok = el("button", "main", "Va bene"); ok.type = "button";
+      const no = el("button", "ghost", "Annulla"); no.type = "button";
+      const done = (v) => { wrap.remove(); res(v); };
+      ok.addEventListener("click", () => done(inp.value.trim()));
+      no.addEventListener("click", () => done(null));
+      inp.addEventListener("keydown", (e) => { if (e.key === "Enter") ok.click(); if (e.key === "Escape") no.click(); });
+      row.append(ok, no); wrap.append(inp, row); document.body.appendChild(wrap); inp.focus(); inp.select();
+    });
+  }
+  function confirmBox(text, yesLabel) {
+    return new Promise((res) => {
+      const wrap = el("div", "card"); wrap.style.position = "fixed"; wrap.style.left = "16px"; wrap.style.right = "16px"; wrap.style.top = "20%"; wrap.style.zIndex = "40"; wrap.style.maxWidth = "480px"; wrap.style.margin = "0 auto"; wrap.style.boxShadow = "0 12px 40px rgba(0,0,0,0.35)";
+      wrap.appendChild(el("p", "expl", text));
+      const row = el("div", "btns");
+      const ok = el("button", "ghost danger", yesLabel || "Sì, elimina"); ok.type = "button";
+      const no = el("button", "main", "No, lascia"); no.type = "button";
+      ok.addEventListener("click", () => { wrap.remove(); res(true); });
+      no.addEventListener("click", () => { wrap.remove(); res(false); });
+      row.append(no, ok); wrap.appendChild(row); document.body.appendChild(wrap); no.focus();
+    });
+  }
+  /* ---------- tipi di materia (parte "nascosta": si sceglie solo creando o rinominando la materia) ---------- */
+  const KINDS = [
+    { id: "gen", label: "Normale", name: "", hint: "Storia, geografia, scienze, italiano..." },
+    { id: "lang:en", label: "Inglese", name: "Inglese", lang: "inglese" },
+    { id: "lang:fr", label: "Francese", name: "Francese", lang: "francese" },
+    { id: "lang:es", label: "Spagnolo", name: "Spagnolo", lang: "spagnolo" },
+    { id: "lang:de", label: "Tedesco", name: "Tedesco", lang: "tedesco" },
+    { id: "latino", label: "Latino", name: "Latino" },
+    { id: "greco", label: "Greco", name: "Greco" },
+    { id: "mate", label: "Matematica", name: "Matematica" },
+    { id: "fisica", label: "Fisica", name: "Fisica" },
+    { id: "chimica", label: "Chimica", name: "Chimica" }
+  ];
+  const kindOf = (sub) => KINDS.find((k) => k.id === (sub && sub.kind)) || KINDS[0];
+  function askSubject(title, initial) {
+    return new Promise((res) => {
+      const wrap = el("div", "card modal");
+      wrap.appendChild(el("h3", null, title));
+      const f1 = el("div", "field"); f1.appendChild(el("span", "lbl", "Nome"));
+      const inp = el("input"); inp.type = "text"; inp.value = (initial && initial.name) || ""; inp.placeholder = "Es. Storia, Scienze, Inglese..."; inp.id = "askNameInput"; f1.appendChild(inp);
+      const f2 = el("div", "field"); f2.appendChild(el("span", "lbl", "Tipo di materia"));
+      f2.appendChild(el("p", "hint", "Per lingue, latino e greco, matematica, fisica e chimica compaiono strumenti in più dentro la materia (traduttore, aiuto versione, aiuto esercizi, formulario)."));
+      const grid = el("div", "kinds"); let kind = (initial && initial.kind) || "gen";
+      KINDS.forEach((k) => { const b = el("button", null, k.label); b.type = "button"; b.classList.toggle("on", k.id === kind); b.addEventListener("click", () => { kind = k.id; grid.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); if (k.name && (!inp.value.trim() || KINDS.some((kk) => kk.name === inp.value.trim()))) inp.value = k.name; }); grid.appendChild(b); });
+      f2.appendChild(grid);
+      const row = el("div", "btns");
+      const ok = el("button", "main", "Va bene"); ok.type = "button";
+      const no = el("button", "ghost", "Annulla"); no.type = "button";
+      const done = (v) => { wrap.remove(); res(v); };
+      ok.addEventListener("click", () => { const name = inp.value.trim(); if (!name) { inp.focus(); return; } done({ name, kind }); });
+      no.addEventListener("click", () => done(null));
+      inp.addEventListener("keydown", (e) => { if (e.key === "Enter") ok.click(); if (e.key === "Escape") no.click(); });
+      row.append(ok, no); wrap.append(f1, f2, row); document.body.appendChild(wrap); inp.focus(); inp.select();
+    });
+  }
+  $("addSubject").addEventListener("click", () => {
+    askSubject("Nuova materia").then((r) => {
+      if (!r) return;
+      const s = { id: uid(), name: r.name, kind: r.kind, color: COLORS[subjects.length % COLORS.length], created: Date.now() };
+      dbPut("subjects", s).then(reloadAll).then(() => { openSubject(s.id); toast("Materia creata"); });
+    });
+  });
+
+  /* ---------- testo libero da Gemini + markdown con formule ---------- */
+  function askText(parts, temperature) {
+    const body = { contents: [{ role: "user", parts }], generationConfig: { temperature: temperature == null ? 0.4 : temperature } };
+    return gemini("models/" + $("model").value + ":generateContent", body).then((j) => {
+      const c = j.candidates && j.candidates[0];
+      const text = c && c.content && c.content.parts ? c.content.parts.filter((p) => p.text && !p.thought).map((p) => p.text).join("") : "";
+      if (!text.trim()) throw fail("Gemini non ha risposto. Riprova.");
+      return text.trim();
+    });
+  }
+  function inline(node, text) {
+    // **grassetto**, *corsivo*, `codice`; il resto testo puro (le formule $...$ restano per KaTeX)
+    const re = /(\*\*[^*]+\*\*|`[^`]+`|\*[^*\n]+\*)/g; let last = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > last) node.appendChild(document.createTextNode(text.slice(last, m.index)));
+      const t = m[0];
+      if (t.startsWith("**")) node.appendChild(el("b", null, t.slice(2, -2)));
+      else if (t.startsWith("`")) node.appendChild(el("code", null, t.slice(1, -1)));
+      else node.appendChild(el("i", null, t.slice(1, -1)));
+      last = m.index + t.length;
+    }
+    if (last < text.length) node.appendChild(document.createTextNode(text.slice(last)));
+  }
+  function renderMD(text) {
+    const box = el("div", "md"); const lines = text.replace(/\r/g, "").split("\n");
+    let i = 0, para = [];
+    const flushP = () => { if (para.length) { const p = el("p"); inline(p, para.join(" ")); box.appendChild(p); para = []; } };
+    while (i < lines.length) {
+      const ln = lines[i];
+      if (/^```/.test(ln)) { flushP(); const buf = []; i++; while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]); i++; const pre = el("pre", null, buf.join("\n")); box.appendChild(pre); continue; }
+      const h = ln.match(/^(#{1,6})\s+(.*)$/);
+      if (h) { flushP(); const e = el("h3"); inline(e, h[2].trim()); box.appendChild(e); i++; continue; }
+      if (/^\s*[-*•]\s+/.test(ln) || /^\s*\d+[.)]\s+/.test(ln)) {
+        flushP(); const ordered = /^\s*\d+[.)]\s+/.test(ln); const list = el(ordered ? "ol" : "ul");
+        while (i < lines.length && (/^\s*[-*•]\s+/.test(lines[i]) || /^\s*\d+[.)]\s+/.test(lines[i]))) { const li = el("li"); inline(li, lines[i].replace(/^\s*([-*•]|\d+[.)])\s+/, "")); list.appendChild(li); i++; }
+        box.appendChild(list); continue;
+      }
+      if (/^\s*\|.*\|\s*$/.test(ln)) {
+        flushP(); const rows = []; while (i < lines.length && /^\s*\|.*\|\s*$/.test(lines[i])) { if (!/^\s*\|[\s:|-]+\|\s*$/.test(lines[i])) rows.push(lines[i].trim().slice(1, -1).split("|").map((c) => c.trim())); i++; }
+        const wrap = el("div"); wrap.style.overflowX = "auto"; const tb = el("table");
+        rows.forEach((r, ri) => { const tr = el("tr"); r.forEach((c) => { const td = el(ri === 0 ? "th" : "td"); inline(td, c); tr.appendChild(td); }); tb.appendChild(tr); });
+        wrap.appendChild(tb); box.appendChild(wrap); continue;
+      }
+      if (/^\s*$/.test(ln)) { flushP(); i++; continue; }
+      para.push(ln.trim()); i++;
+    }
+    flushP();
+    if (window.renderMathInElement) { try { window.renderMathInElement(box, { delimiters: [{ left: "$$", right: "$$", display: true }, { left: "\\[", right: "\\]", display: true }, { left: "$", right: "$", display: false }, { left: "\\(", right: "\\)", display: false }], throwOnError: false }); } catch (e) {} }
+    return box;
+  }
+
+  /* ---------- strumenti per tipo di materia ---------- */
+  const toolAttach = { files: [] };
+  /* ---------- siti e portali famosi, per tipo di materia o per nome ---------- */
+  const LINKS = {
+    lang: [
+      ["WordReference", "https://www.wordreference.com/", "Il dizionario bilingue più usato, con forum sulle espressioni"],
+      ["Reverso Context", "https://context.reverso.net/traduzione/", "Frasi vere con la parola usata nel contesto"],
+      ["DeepL", "https://www.deepl.com/translator", "Traduttore di frasi e testi interi"],
+      ["Forvo", "https://forvo.com/", "Pronuncia delle parole registrata da madrelingua"],
+      ["Duolingo", "https://www.duolingo.com/", "Esercizi quotidiani di vocaboli e grammatica"]
+    ],
+    "lang:en": [["Cambridge Dictionary", "https://dictionary.cambridge.org/it/", "Dizionario inglese con definizioni semplici e pronuncia"], ["BBC Learning English", "https://www.bbc.co.uk/learningenglish", "Video e audio per allenare l'ascolto"]],
+    "lang:fr": [["Larousse", "https://www.larousse.fr/dictionnaires/francais", "Dizionario francese di riferimento"], ["TV5MONDE Apprendre", "https://apprendre.tv5monde.com/", "Esercizi con video in francese"]],
+    "lang:es": [["RAE", "https://dle.rae.es/", "Il dizionario ufficiale dello spagnolo"], ["SpanishDict", "https://www.spanishdict.com/", "Dizionario, coniugazioni e grammatica"]],
+    "lang:de": [["Duden", "https://www.duden.de/", "Il dizionario tedesco di riferimento"], ["Deutsche Welle Learn German", "https://learngerman.dw.com/", "Corsi e esercizi gratuiti"]],
+    latino: [
+      ["Dizionario latino Olivetti", "https://www.dizionario-latino.com/", "Dizionario con analisi delle forme e declinatore"],
+      ["Latin Words (Whitaker)", "https://latin-words.com/", "Scrivi una forma e ti dice lemma e analisi"],
+      ["Perseus", "https://www.perseus.tufts.edu/hopper/", "Testi latini originali con analisi parola per parola"],
+      ["Logeion", "https://logeion.uchicago.edu/", "Più dizionari latini e greci in uno"]
+    ],
+    greco: [
+      ["Dizionario greco Olivetti", "https://www.grecoantico.com/", "Dizionario di greco antico con analisi delle forme"],
+      ["Perseus", "https://www.perseus.tufts.edu/hopper/", "Testi greci originali con analisi parola per parola"],
+      ["Logeion", "https://logeion.uchicago.edu/", "Più dizionari greci e latini in uno"],
+      ["Tastiera greca online", "https://www.lexilogos.com/keyboard/greek_ancient.htm", "Per scrivere il greco con accenti e spiriti"]
+    ],
+    mate: [
+      ["Photomath", "https://photomath.com/", "Fotografa l'esercizio e vedi i passaggi"],
+      ["WolframAlpha", "https://www.wolframalpha.com/", "Risolve calcoli, equazioni e funzioni"],
+      ["GeoGebra", "https://www.geogebra.org/calculator", "Grafici, geometria e calcolatrice grafica"],
+      ["Desmos", "https://www.desmos.com/calculator?lang=it", "Calcolatrice grafica semplicissima"],
+      ["Khan Academy", "https://it.khanacademy.org/math", "Video lezioni ed esercizi gratuiti"]
+    ],
+    fisica: [
+      ["PhET", "https://phet.colorado.edu/it/", "Simulazioni interattive di fisica"],
+      ["WolframAlpha", "https://www.wolframalpha.com/", "Calcoli con unità di misura e costanti"],
+      ["Khan Academy", "https://it.khanacademy.org/science/physics", "Video lezioni ed esercizi di fisica"],
+      ["Photomath", "https://photomath.com/", "Per i calcoli dei problemi"]
+    ],
+    chimica: [
+      ["Ptable", "https://ptable.com/?lang=it", "Tavola periodica interattiva"],
+      ["PhET", "https://phet.colorado.edu/it/simulations/filter?subjects=chemistry", "Simulazioni di chimica"],
+      ["WolframAlpha", "https://www.wolframalpha.com/", "Masse molari, bilanciamenti, calcoli"],
+      ["Khan Academy", "https://it.khanacademy.org/science/chemistry", "Video lezioni ed esercizi di chimica"]
+    ],
+    italiano: [["Treccani Vocabolario", "https://www.treccani.it/vocabolario/", "Significati, etimologia e sinonimi"], ["Accademia della Crusca", "https://accademiadellacrusca.it/it/consulenza", "Dubbi di grammatica risolti dagli esperti"], ["Dizionario dei sinonimi", "https://www.treccani.it/vocabolario/sinonimi/", "Per non ripetere sempre le stesse parole"]],
+    storia: [["Treccani", "https://www.treccani.it/enciclopedia/", "Enciclopedia per approfondire"], ["Rai Scuola", "https://www.raiscuola.rai.it/", "Video e documentari"], ["Wikipedia", "https://it.wikipedia.org/", "Per una prima panoramica (controlla sempre sul libro)"]],
+    geografia: [["Google Earth", "https://earth.google.com/web/", "Il mondo in 3D"], ["Treccani Atlante", "https://www.treccani.it/enciclopedia/elenco-opere/Atlante_Geopolitico", "Dati e schede sui paesi"], ["Seterra", "https://www.geoguessr.com/seterra/it", "Quiz di geografia sulle cartine"]],
+    scienze: [["Khan Academy", "https://it.khanacademy.org/science", "Video lezioni di scienze"], ["PhET", "https://phet.colorado.edu/it/", "Simulazioni interattive"], ["Rai Scuola", "https://www.raiscuola.rai.it/", "Video e documentari"]],
+    arte: [["Google Arts & Culture", "https://artsandculture.google.com/", "Opere in altissima definizione e musei virtuali"], ["Treccani", "https://www.treccani.it/enciclopedia/", "Schede su artisti e opere"]],
+    musica: [["musictheory.net", "https://www.musictheory.net/lessons", "Lezioni ed esercizi di teoria musicale"], ["Teoria.com", "https://www.teoria.com/", "Esercizi di ascolto e lettura"]],
+    tecnologia: [["W3Schools", "https://www.w3schools.com/", "Per imparare a programmare passo passo"], ["Scratch", "https://scratch.mit.edu/", "Programmare a blocchi"], ["Khan Academy Computing", "https://it.khanacademy.org/computing", "Informatica spiegata bene"]],
+    civica: [["La Costituzione", "https://www.senato.it/istituzione/la-costituzione", "Il testo ufficiale sul sito del Senato"], ["Treccani", "https://www.treccani.it/enciclopedia/", "Per i termini del diritto"]]
+  };
+  function linksFor(sub) {
+    const k = kindOf(sub); const name = (sub.name || "").toLowerCase(); let out = [];
+    if (k.lang) out = (LINKS[k.id] || []).concat(LINKS.lang);
+    else if (LINKS[k.id]) out = LINKS[k.id];
+    else {
+      if (/ital|grammat|lett|antolog|epica/.test(name)) out = out.concat(LINKS.italiano);
+      if (/stor/.test(name)) out = out.concat(LINKS.storia);
+      if (/geo/.test(name)) out = out.concat(LINKS.geografia);
+      if (/scien|biolog|natur/.test(name)) out = out.concat(LINKS.scienze);
+      if (/arte|disegn/.test(name)) out = out.concat(LINKS.arte);
+      if (/music/.test(name)) out = out.concat(LINKS.musica);
+      if (/tecn|inform|coding|comput/.test(name)) out = out.concat(LINKS.tecnologia);
+      if (/civic|cittadin|diritto|costituz/.test(name)) out = out.concat(LINKS.civica);
+      if (/mate|aritm|geometr|algebr/.test(name)) out = out.concat(LINKS.mate);
+      if (/fisic/.test(name)) out = out.concat(LINKS.fisica);
+      if (/chim/.test(name)) out = out.concat(LINKS.chimica);
+      if (/ingl|english/.test(name)) out = out.concat(LINKS["lang:en"], LINKS.lang);
+      if (/franc/.test(name)) out = out.concat(LINKS["lang:fr"], LINKS.lang);
+      if (/spagn/.test(name)) out = out.concat(LINKS["lang:es"], LINKS.lang);
+      if (/tedes/.test(name)) out = out.concat(LINKS["lang:de"], LINKS.lang);
+      if (/latin/.test(name)) out = out.concat(LINKS.latino);
+      if (/grec/.test(name)) out = out.concat(LINKS.greco);
+    }
+    const seen = new Set(); return out.filter((l) => { if (seen.has(l[1])) return false; seen.add(l[1]); return true; });
+  }
+  function renderLinks(sub) {
+    const list = linksFor(sub); const card = $("linksCard"), box = $("linksList"); box.textContent = "";
+    card.hidden = !list.length;
+    list.forEach(([name, url, desc]) => { const a = el("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.appendChild(el("b", null, name)); a.appendChild(el("span", null, desc)); box.appendChild(a); });
+  }
+  function renderTools(sub) {
+    const card = $("toolsCard"); card.textContent = ""; toolAttach.files = [];
+    const k = kindOf(sub); const w = who();
+    if (k.id === "gen") { card.hidden = true; return; }
+    card.hidden = false;
+    let history = []; // ultima domanda e risposta, per i «non ho capito»
+    const title = k.lang ? "Dizionario e traduttore di " + k.lang : (k.id === "latino" || k.id === "greco") ? "Aiuto versione di " + k.name.toLowerCase() : "Aiuto esercizi di " + k.name.toLowerCase();
+    card.appendChild(el("h3", null, title));
+    const ta = el("textarea"); ta.id = "toolText";
+    const opts = el("div", "field");
+    let dir = null, ctx = null, onlyHelp = null;
+    if (k.lang) {
+      ta.placeholder = "Scrivi una parola, un'espressione o una frase in italiano o in " + k.lang + "...";
+      const rowD = el("div", "row"); const d1 = el("div"); d1.appendChild(el("label", null, "Direzione"));
+      dir = el("select"); dir.id = "toolDir"; [["auto", "Capisci da solo"], ["to", "Italiano → " + k.lang], ["from", k.lang + " → italiano"]].forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; dir.appendChild(o); });
+      d1.appendChild(dir); rowD.appendChild(d1); opts.appendChild(rowD);
+      ctx = el("textarea"); ctx.id = "toolCtx"; ctx.style.minHeight = "60px"; ctx.placeholder = "Se vuoi, incolla la frase o il pezzo di testo in cui hai trovato la parola: la spiego in quel contesto.";
+      opts.appendChild(ctx);
+    } else if (k.id === "latino" || k.id === "greco") {
+      ta.placeholder = "Incolla il testo della versione (o anche solo una frase), oppure scatta una foto qui sotto.";
+      const c = el("div", "check"); onlyHelp = el("input"); onlyHelp.type = "checkbox"; onlyHelp.id = "toolOnly";
+      const lab = el("label", null, "Solo aiuti, senza darmi la traduzione"); lab.htmlFor = "toolOnly";
+      const dv = el("div"); dv.appendChild(lab); dv.appendChild(el("p", "hint", "Ti dà analisi, costruzione e suggerimenti, ma la traduzione finale la fai tu."));
+      c.append(onlyHelp, dv); opts.appendChild(c);
+    } else {
+      ta.placeholder = "Scrivi l'esercizio, il problema o la domanda (puoi anche fotografarlo qui sotto).";
+      const c = el("div", "check"); onlyHelp = el("input"); onlyHelp.type = "checkbox"; onlyHelp.id = "toolOnly";
+      const lab = el("label", null, "Spiegami il metodo senza darmi il risultato"); lab.htmlFor = "toolOnly";
+      const dv = el("div"); dv.appendChild(lab); dv.appendChild(el("p", "hint", "Ti guida passo passo e ti lascia fare i conti."));
+      c.append(onlyHelp, dv); opts.appendChild(c);
+    }
+    card.appendChild(ta);
+    const micRow = el("div", "btns"); const mic = el("button", "mic", "🎤 Detta"); mic.type = "button"; mic.hidden = true; micRow.appendChild(mic); card.appendChild(micRow); attachMic(mic, ta);
+    card.appendChild(opts);
+    // foto
+    const fileF = el("div", "field"); const fl = el("label", null, "Foto o PDF (facoltativo)"); fl.htmlFor = "toolFile"; fileF.appendChild(fl);
+    const fi = el("input"); fi.type = "file"; fi.id = "toolFile"; fi.multiple = true; fi.accept = ".pdf,.jpg,.jpeg,.png,.webp,image/*,application/pdf"; fileF.appendChild(fi);
+    const fmsg = el("p", "hint", ""); fileF.appendChild(fmsg); card.appendChild(fileF);
+    fi.addEventListener("change", function () {
+      const files = Array.from(this.files || []); const out = [];
+      let chain = Promise.resolve();
+      files.forEach((f) => { chain = chain.then(() => { if (f.size > 6 * 1024 * 1024) { out.push(f.name + ": troppo grande."); return; } const mime = /pdf$/i.test(f.name) ? "application/pdf" : (f.type || "image/jpeg"); return reader(f, "readAsDataURL").then((d) => { toolAttach.files.push({ mime, data: String(d).split(",")[1], name: f.name }); out.push(f.name + ": allegato."); }); }).catch(() => out.push(f.name + ": non riesco a leggerlo.")); });
+      chain.then(() => { fmsg.textContent = out.join(" "); this.value = ""; });
+    });
+    // bottoni
+    const row = el("div", "btns"); card.appendChild(row);
+    const out = el("div"); card.appendChild(out);
+    const run = (label, build) => {
+      const text = ta.value.trim();
+      if (!text && !toolAttach.files.length) { toast("Scrivi qualcosa o allega una foto"); return; }
+      if (!keyOk) { toast("Prima salva la chiave Gemini nelle Impostazioni"); return; }
+      if (busy) return; busy = true;
+      row.querySelectorAll("button").forEach((b) => (b.disabled = true));
+      const wait = el("p", "loading", "L'insegnante ci sta pensando..."); out.textContent = ""; out.appendChild(wait);
+      const prompt = build(text);
+      const parts = [{ text: prompt + (text ? "\n\nTESTO:\n\"\"\"\n" + text + "\n\"\"\"" : "\n\n(Il testo è nella foto o nel PDF allegato.)") }];
+      toolAttach.files.forEach((a) => parts.push({ inline_data: { mime_type: a.mime, data: a.data } }));
+      askText(parts, 0.4).then((raw) => {
+        const parsed = splitConfidence(raw); const ans = parsed.text;
+        row.querySelectorAll("button").forEach((b) => (b.disabled = false));
+        history = [{ q: label + ": " + (text || "(foto)"), a: ans }];
+        showAnswer(ans);
+        const reasons = [];
+        if (parsed.level === "bassa") reasons.push("l'insegnante IA si è dichiarata poco sicura di questa risposta");
+        else if (parsed.level === "media") reasons.push("l'insegnante IA non è del tutto sicura di questa risposta");
+        // ricontrollo automatico del risultato per le materie scientifiche
+        const sci = (k.id === "mate" || k.id === "fisica" || k.id === "chimica") && (label === "Esercizio" || label === "Correzione") && !onlyHelp.checked;
+        if (!sci) { busy = false; if (reasons.length) showBanner(reasons); return; }
+        const chk = el("p", "loading", "Ricontrollo il risultato..."); out.insertBefore(chk, out.firstChild.nextSibling);
+        const vprompt = [
+          "Sei un correttore severo di " + (k.id === "mate" ? "matematica" : k.id === "fisica" ? "fisica" : "chimica") + ". Risolvi DA CAPO e in modo indipendente l'esercizio nel TESTO (o nell'allegato), senza fidarti della soluzione proposta. Poi confronta il TUO risultato finale con quello della soluzione proposta.",
+          "SOLUZIONE PROPOSTA:\n\"\"\"\n" + ans.slice(0, 6000) + "\n\"\"\"",
+          "Rispondi SOLO con un oggetto JSON: {\"coincide\": true oppure false (true se il risultato finale e i passaggi essenziali coincidono, anche se scritti in forma diversa), \"tuo_risultato\": string breve, \"nota\": 1 frase che spiega l'eventuale differenza}."
+        ].join("\n\n");
+        const vparts = [{ text: vprompt + (text ? "\n\nTESTO:\n\"\"\"\n" + text + "\n\"\"\"" : "") }]; toolAttach.files.forEach((a) => vparts.push({ inline_data: { mime_type: a.mime, data: a.data } }));
+        askJSON(vparts, 0).then((v) => {
+          chk.remove(); busy = false;
+          if (v && v.coincide === false) reasons.push("un ricontrollo indipendente ha trovato un risultato diverso" + (v.tuo_risultato ? " (" + String(v.tuo_risultato).slice(0, 80) + ")" : "") + (v.nota ? ": " + String(v.nota).slice(0, 160) : ""));
+          else if (v && v.coincide === true) { const okp = el("p", "hint ok", "Risultato ricontrollato: coincide."); out.insertBefore(okp, out.firstChild.nextSibling); }
+          if (reasons.length) showBanner(reasons);
+        }).catch(() => { chk.remove(); busy = false; if (reasons.length) showBanner(reasons); });
+      }).catch((e) => { busy = false; row.querySelectorAll("button").forEach((b) => (b.disabled = false)); out.textContent = ""; out.appendChild(el("p", "err", explain(e))); });
+    };
+    function splitConfidence(raw) {
+      const m = raw.match(/\n?\s*\**\s*AFFIDABILIT[AÀ]\s*:?\s*\**\s*(alta|media|bassa)\b[^\n]*$/i);
+      if (!m) return { text: raw, level: "" };
+      return { text: raw.slice(0, m.index).trim(), level: m[1].toLowerCase() };
+    }
+    function showBanner(reasons) {
+      const ban = el("div", "warnban");
+      ban.appendChild(el("p", null, "Risultato probabilmente non accurato: si invita ad utilizzare uno dei siti riportati per questa materia."));
+      ban.appendChild(el("p", "why", "Perché: " + reasons.join("; ").replace(/\.$/, "") + "."));
+      const list = linksFor(sub).slice(0, 4);
+      if (list.length) { const g = el("div", "links"); list.forEach(([name, url, desc]) => { const a = el("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.appendChild(el("b", null, name)); a.appendChild(el("span", null, desc)); g.appendChild(a); }); ban.appendChild(g); }
+      out.insertBefore(ban, out.firstChild);
+      ban.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+    function showAnswer(ans) {
+      out.textContent = "";
+      const box = el("div", "out"); box.appendChild(el("p", "tag", "Risposta dell'insegnante")); box.appendChild(renderMD(ans)); out.appendChild(box);
+      // domanda di seguito
+      const f = el("div", "field"); const fq = el("textarea"); fq.style.minHeight = "60px"; fq.placeholder = "Non hai capito qualcosa? Chiedi qui (es. «perché si usa il genitivo?», «rifammi il passaggio 3»)";
+      const fb = el("button", "ghost", "Chiedi"); fb.type = "button";
+      fb.addEventListener("click", () => {
+        const q = fq.value.trim(); if (!q || busy) return; busy = true; fb.disabled = true;
+        const wait = el("p", "loading", "Un attimo..."); f.appendChild(wait);
+        const prompt = [base(), "Questa è la conversazione finora:", history.map((h) => "STUDENTE: " + h.q + "\nINSEGNANTE: " + h.a).join("\n\n"), "Nuova domanda dello studente: " + q, "Rispondi solo a questa domanda, in modo chiaro, con lo stesso formato."].join("\n\n");
+        const parts = [{ text: prompt }]; toolAttach.files.forEach((a) => parts.push({ inline_data: { mime_type: a.mime, data: a.data } }));
+        askText(parts, 0.4).then((raw2) => { const ans2 = splitConfidence(raw2).text; busy = false; fb.disabled = false; wait.remove(); history.push({ q, a: ans2 }); if (history.length > 4) history = history.slice(-4); const b2 = el("div", "out"); b2.appendChild(el("p", "tag", "Risposta")); b2.appendChild(renderMD(ans2)); out.insertBefore(b2, f); fq.value = ""; b2.scrollIntoView({ block: "nearest", behavior: "smooth" }); })
+          .catch((e) => { busy = false; fb.disabled = false; wait.remove(); f.appendChild(el("p", "err", explain(e))); });
+      });
+      f.append(fq, fb); out.appendChild(f);
+      box.scrollIntoView({ block: "start", behavior: "smooth" });
+    }
+    const base = () => "Sei un'insegnante di " + w.school + " italiana, gentile e precisa. Stai aiutando " + w.desc + ". " + w.style + " Usa il markdown (titoli brevi con ##, elenchi, **grassetto**) e per le formule usa LaTeX tra $...$ (in riga) o $$...$$ (a capo). Non usare tabelle troppo larghe. ALLA FINE della risposta, su una riga a parte, scrivi esattamente «AFFIDABILITÀ: alta» oppure «AFFIDABILITÀ: media» oppure «AFFIDABILITÀ: bassa», in base a quanto sei sicura: bassa se il testo o la foto erano poco leggibili, se l'esercizio è ambiguo o se non sei certa del risultato o della traduzione.";
+    const fmt = " Adatta tutto al livello di " + w.grade + ": " + (/elementare/.test(w.grade) ? "parole semplicissime, niente termini tecnici, esempi concreti." : /media/.test(w.grade) ? "spiegazioni semplici, un po' di terminologia solo se serve." : "terminologia corretta della materia, rigore, come si farebbe in classe alle superiori.");
+    if (k.lang) {
+      row.appendChild(mkBtn("Traduci", "main", () => run("Traduci", (t) => base() + fmt + " Compito: traduci il testo " + (dir.value === "to" ? "dall'italiano al " + k.lang : dir.value === "from" ? "dal " + k.lang + " all'italiano" : "(capisci da solo se è italiano o " + k.lang + " e traduci nell'altra lingua)") + ". Dai: la traduzione; se ci sono più modi di dirlo, 2-3 alternative con la differenza; una nota sulla grammatica o sulle espressioni usate; eventuali errori nel testo originale segnalati con gentilezza." + (ctx.value.trim() ? " Contesto in cui compare: \"" + ctx.value.trim() + "\"." : ""))));
+      row.appendChild(mkBtn("Spiega come il dizionario", "ghost", () => run("Dizionario", (t) => base() + fmt + " Compito: spiega la parola o l'espressione come farebbe un buon dizionario di " + k.lang + ": categoria grammaticale, pronuncia scritta in modo semplice (e IPA se " + (/superiore/.test(w.grade) ? "utile" : "proprio serve") + "), tutti i significati principali con un esempio in " + k.lang + " e traduzione per ciascuno, forme irregolari (plurale, paradigma del verbo, comparativi...), espressioni fisse e falsi amici con l'italiano." + (ctx.value.trim() ? " Poi spiega quale significato ha in questo contesto: \"" + ctx.value.trim() + "\"." : ""))));
+      row.appendChild(mkBtn("Correggi il mio testo", "ghost", () => run("Correzione", (t) => base() + fmt + " Compito: il testo è scritto dallo studente in " + k.lang + ". Correggi gli errori di grammatica, ortografia e lessico: prima il testo corretto, poi un elenco degli errori con la spiegazione breve della regola, poi un suggerimento per renderlo più naturale.")));
+    } else if (k.id === "latino" || k.id === "greco") {
+      const L = k.name.toLowerCase();
+      row.appendChild(mkBtn("Aiutami con la versione", "main", () => run("Versione", (t) => base() + fmt + " Compito: aiuta con questa versione di " + L + ". Procedi frase per frase: 1) individua verbo principale, soggetto e struttura (principali e subordinate, costrutti notevoli come ablativo assoluto, cum narrativo, perifrastiche, infinitive, participi, genitivo assoluto, ecc.); 2) analisi delle parole difficili (lemma, forma, caso/tempo/modo, paradigma); 3) i costrutti da ricordare con la regola; " + (onlyHelp.checked ? "4) NON dare la traduzione: dai solo suggerimenti su come rendere in italiano i punti difficili e lascia che sia lo studente a tradurre." : "4) traduzione letterale e poi traduzione in buon italiano; 5) note di cultura o di stile se utili.") + (k.id === "greco" ? " Scrivi le parole greche con l'alfabeto greco e, se aiuta, una traslitterazione." : ""))));
+      row.appendChild(mkBtn("Analizza una parola", "ghost", () => run("Analisi", (t) => base() + fmt + " Compito: analizza la parola o le parole di " + L + " nel testo: lemma con il paradigma completo (per i nomi nominativo, genitivo e genere; per i verbi tutto il paradigma), declinazione o coniugazione di appartenenza, analisi della forma (caso, numero, genere / persona, tempo, modo, diatesi), significati principali, e la tabella completa della declinazione o della coniugazione al tempo richiesto se è utile.")));
+      row.appendChild(mkBtn("Ripassa la grammatica", "ghost", () => run("Grammatica", (t) => base() + fmt + " Compito: spiega l'argomento di grammatica " + L + " indicato nel testo (o, se il testo è una frase, i costrutti che contiene): regola, tabelle con le forme, esempi con traduzione, errori tipici, trucchi per ricordare.")));
+    } else {
+      const M = k.id === "mate" ? "matematica" : k.id === "fisica" ? "fisica" : "chimica";
+      const extra = k.id === "fisica" ? " Indica sempre le unità di misura, le formule usate e i passaggi numerici con le cifre significative giuste." : k.id === "chimica" ? " Scrivi le formule chimiche con pedici (es. H$_2$O) e le reazioni bilanciate; se serve usa la tavola periodica, la nomenclatura IUPAC e tradizionale, le moli e i calcoli stechiometrici." : " Mostra ogni passaggio e, se utile, controlla il risultato con una verifica finale.";
+      row.appendChild(mkBtn("Aiutami", "main", () => run("Esercizio", (t) => base() + fmt + extra + " Compito: " + (onlyHelp.checked ? "spiega come si affronta l'esercizio di " + M + ": che cosa chiede, quali formule o regole servono, i passaggi da fare in ordine, i trabocchetti; NON dare il risultato finale né i calcoli completi, solo il metodo, e chiudi con un incoraggiamento a provare." : "risolvi l'esercizio di " + M + " passo per passo, spiegando il perché di ogni passaggio come alla lavagna, e metti il risultato finale evidenziato in fondo."))));
+      row.appendChild(mkBtn("Formulario", "ghost", () => run("Formulario", (t) => base() + fmt + " Compito: prepara il formulario di " + M + " sull'argomento indicato nel testo (o su cui verte l'esercizio): tutte le formule e le regole che servono, ciascuna con il significato dei simboli, le unità di misura e un esempio brevissimo, " + (/superiore/.test(w.grade) ? "nel rigore delle superiori" : "nel modo più semplice possibile") + ".")));
+      row.appendChild(mkBtn("Correggi il mio svolgimento", "ghost", () => run("Correzione", (t) => base() + fmt + extra + " Compito: nel testo (o nella foto) c'è l'esercizio svolto dallo studente. Controlla passaggio per passaggio: dì che cosa è giusto, dove c'è l'errore e perché, e come correggerlo; alla fine dai il risultato corretto.")));
+      row.appendChild(mkBtn("Esercizi simili", "ghost", () => run("Esercizi", (t) => base() + fmt + " Compito: crea 3 esercizi di " + M + " simili a quello nel testo, dal più facile al più difficile, e metti le soluzioni in fondo sotto un titolo «Soluzioni», così lo studente prova prima da solo.")));
+    }
+    function mkBtn(label, cls, fn) { const b = el("button", cls, label); b.type = "button"; b.addEventListener("click", fn); return b; }
+  }
+  function openSubject(id) {
+    curSubject = subjectById(id); if (!curSubject) return;
+    $("sName").textContent = curSubject.name; $("sDot").style.background = curSubject.color;
+    renderTools(curSubject); renderLinks(curSubject);
+    const ss = sessions.filter((x) => x.subjectId === id);
+    // fiamma e voto della materia
+    const st = $("sStats"); st.textContent = "";
+    const stk = streakOf(ss), g = gradeOf(ss);
+    st.appendChild(streakEl(stk)); st.appendChild(votoEl(g));
+    st.appendChild(el("div", "meta", !ss.length ? "Nessuna interrogazione ancora: fai la prima!" : (stk.n > 0 && !stk.today ? "Fatti interrogare oggi per tenere accesa la fiamma! · " : stk.n === 0 ? "La fiamma è spenta: un'interrogazione oggi la riaccende. · " : "Fiamma accesa anche oggi! · ") + ss.length + (ss.length === 1 ? " interrogazione" : " interrogazioni") + ", " + g.r + " giuste su " + g.t));
+    // appunti
+    const list = $("noteList"); list.textContent = "";
+    const ns = notesOf(id);
+    if (!ns.length) list.appendChild(el("p", "empty", "Nessun appunto in questa materia. Premi «+ Nuovi appunti»."));
+    ns.forEach((n) => {
+      const b = el("button", "item"); b.type = "button";
+      const g2 = el("div", "grow"); g2.appendChild(el("div", "t", n.title));
+      const words = (n.text || "").split(/\s+/).filter(Boolean).length;
+      g2.appendChild(el("div", "m", (words ? words + " parole" : "nessun testo") + (n.attachments.length ? " · " + n.attachments.length + (n.attachments.length === 1 ? " allegato" : " allegati") : "") + " · " + fmtDate(n.updated)));
+      b.appendChild(g2); b.appendChild(el("span", "arrow", "›"));
+      b.addEventListener("click", () => openNote(n.id));
+      list.appendChild(b);
+    });
+    // ripassi fatti: data e argomento
+    const sl = $("sessList"); sl.textContent = "";
+    if (!ss.length) sl.appendChild(el("p", "empty", "Ancora nessun ripasso in questa materia."));
+    ss.slice(0, 30).forEach((x) => {
+      const d = el("div", "item"); d.style.cursor = "default";
+      const g3 = el("div", "grow"); g3.appendChild(el("div", "t", (x.noteTitles || []).join(", ") || "Appunti"));
+      g3.appendChild(el("div", "m", fmtDate(x.date) + " · " + MODE_NAMES[x.mode]));
+      d.append(g3, gradeChip(x)); sl.appendChild(d);
+    });
+    $("studyThis").disabled = !ns.length;
+    // da ripassare: errori degli ultimi 30 giorni di questa materia
+    const rc = $("reviewCard"), rl = $("reviewList"); rl.textContent = "";
+    const since = Date.now() - 30 * 86400000, errs = [];
+    ss.filter((x) => x.date >= since).forEach((x) => (x.wrong || []).forEach((w) => errs.push({ s: x, w })));
+    const seen = new Set(); const uniq = errs.filter((e) => { const k = e.w.q.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 20);
+    rc.hidden = !ss.length;
+    if (!uniq.length) { rl.appendChild(el("p", "empty", "Nessun errore nelle ultime interrogazioni. Grande!")); $("reviewBtn").disabled = true; }
+    else {
+      $("reviewBtn").disabled = false;
+      uniq.forEach((e) => { const d = el("div", "item"); d.style.cursor = "default"; const g4 = el("div", "grow"); g4.appendChild(el("div", "t", e.w.q)); g4.appendChild(el("div", "m", (e.w.answer ? "Risposta: " + e.w.answer + " · " : "") + fmtDate(e.s.date))); d.appendChild(g4); rl.appendChild(d); });
+    }
+    $("reviewBtn").onclick = () => {
+      const noteIds = new Set(); uniq.forEach((e) => (e.s.noteIds || []).forEach((nid) => noteIds.add(nid)));
+      const points = uniq.map((e) => e.w.q + (e.w.answer ? " (risposta giusta: " + e.w.answer + ")" : ""));
+      store("i2_lastSubject", id);
+      pendingReview = { subjectId: id, noteIds: Array.from(noteIds), points };
+      show("studia");
+      toast("Pronto: premi «Ripassa gli errori»");
+    };
+    show("materia");
+  }
+  $("studyThis").addEventListener("click", () => { store("i2_lastSubject", curSubject.id); $("qSubject").value = curSubject.id; show("studia"); });
+  $("backSubjects").addEventListener("click", () => show("home"));
+  $("renameSubject").addEventListener("click", () => {
+    askSubject("Modifica materia", { name: curSubject.name, kind: curSubject.kind || "gen" }).then((r) => { if (!r) return; curSubject.name = r.name; curSubject.kind = r.kind; dbPut("subjects", curSubject).then(reloadAll).then(() => openSubject(curSubject.id)); });
+  });
+  $("delSubject").addEventListener("click", () => {
+    const ns = notesOf(curSubject.id);
+    confirmBox("Eliminare «" + curSubject.name + "»" + (ns.length ? " con i suoi " + ns.length + " appunti" : "") + "? Lo storico delle interrogazioni resta.").then((yes) => {
+      if (!yes) return;
+      Promise.all(ns.map((n) => dbDel("notes", n.id))).then(() => dbDel("subjects", curSubject.id)).then(reloadAll).then(() => { show("home"); toast("Materia eliminata"); });
+    });
+  });
+
+  /* ---------- APPUNTI ---------- */
+  function renderAttach() {
+    const box = $("nAttach"); box.textContent = "";
+    noteAttach.forEach((a, i) => {
+      const s = el("span"); s.appendChild(el("em", null, a.name));
+      const x = el("button", null, "×"); x.type = "button"; x.setAttribute("aria-label", "Togli " + a.name);
+      x.addEventListener("click", () => { noteAttach.splice(i, 1); renderAttach(); });
+      s.appendChild(x); box.appendChild(s);
+    });
+  }
+  function openNote(id) {
+    curNote = id ? notes.find((n) => n.id === id) : null;
+    $("nTitleHdr").textContent = curNote ? "Modifica appunti" : "Nuovi appunti in " + curSubject.name;
+    $("nTitle").value = curNote ? curNote.title : "";
+    $("nText").value = curNote ? curNote.text : "";
+    noteAttach = curNote ? curNote.attachments.slice() : [];
+    renderAttach();
+    $("delNote").hidden = !curNote; $("nMsg").textContent = ""; $("nFileMsg").textContent = "Vanno bene PDF, Word (.docx), foto del libro o del quaderno (anche scattate ora col telefono), scansioni e file di testo. Le foto e i PDF restano allegati e Gemini li legge direttamente; dai Word e dai testi viene copiato il contenuto nel riquadro sopra.";
+    show("nota");
+    setTimeout(() => $("nTitle").focus(), 50);
+  }
+  $("addNote").addEventListener("click", () => openNote(null));
+  $("backNotes").addEventListener("click", () => openSubject(curSubject.id));
+  $("saveNote").addEventListener("click", () => {
+    const title = $("nTitle").value.trim(), text = $("nText").value.trim();
+    if (!title) { $("nMsg").className = "hint err"; $("nMsg").textContent = "Scrivi un titolo."; return; }
+    if (text.length < 3 && !noteAttach.length) { $("nMsg").className = "hint err"; $("nMsg").textContent = "Scrivi del testo o allega un file."; return; }
+    const n = curNote || { id: uid(), subjectId: curSubject.id, created: Date.now() };
+    n.title = title; n.text = text; n.attachments = noteAttach; n.updated = Date.now();
+    dbPut("notes", n).then(reloadAll).then(() => { toast("Appunti salvati"); openSubject(curSubject.id); }).catch(() => { $("nMsg").className = "hint err"; $("nMsg").textContent = "Non riesco a salvare (forse gli allegati sono troppo grandi)."; });
+  });
+  $("delNote").addEventListener("click", () => {
+    confirmBox("Eliminare gli appunti «" + curNote.title + "»?").then((yes) => { if (!yes) return; dbDel("notes", curNote.id).then(reloadAll).then(() => { toast("Appunti eliminati"); openSubject(curSubject.id); }); });
+  });
+
+  const reader = (f, how) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(new Error("lettura")); r[how](f); });
+  const bytesOf = (list) => list.reduce((n, a) => n + a.data.length * 0.75, 0);
+  function addText(t) { const box = $("nText"); box.value = (box.value.trim() ? box.value.trim() + "\n\n" : "") + t.trim(); }
+  $("nFile").addEventListener("change", function () {
+    const input = this, files = Array.from(input.files || []), msg = $("nFileMsg");
+    if (!files.length) return;
+    const out = [];
+    let chain = Promise.resolve();
+    files.forEach((f) => {
+      chain = chain.then(() => {
+        const name = f.name.toLowerCase(), ext = name.slice(name.lastIndexOf("."));
+        msg.textContent = "Leggo " + f.name + "...";
+        const isImg = /^image\//.test(f.type);
+        if (ext === ".pdf" || isImg || [".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+          if (bytesOf(noteAttach) + f.size > MAX_ATTACH_BYTES) { out.push(f.name + ": troppo grande (limite totale circa 14 MB per appunto)."); return; }
+          const mime = ext === ".pdf" ? "application/pdf" : (f.type || (ext === ".png" ? "image/png" : ext === ".webp" ? "image/webp" : "image/jpeg"));
+          return reader(f, "readAsDataURL").then((d) => { noteAttach.push({ mime, data: String(d).split(",")[1], name: f.name }); out.push(f.name + ": allegato."); });
+        }
+        if (ext === ".docx") {
+          if (!window.mammoth) { out.push(f.name + ": non riesco a leggere i Word senza internet."); return; }
+          return reader(f, "readAsArrayBuffer").then((b) => window.mammoth.extractRawText({ arrayBuffer: b })).then((r) => { if ((r.value || "").trim().length < 20) { out.push(f.name + ": nessun testo trovato."); return; } addText(r.value); out.push(f.name + ": testo copiato."); });
+        }
+        if (ext === ".txt" || ext === ".md") return reader(f, "readAsText").then((t) => { addText(String(t)); out.push(f.name + ": testo copiato."); });
+        out.push(f.name + ": formato non supportato (usa PDF, .docx, .txt o foto).");
+      }).catch(() => { out.push(f.name + ": non riesco a leggerlo."); });
+    });
+    chain.then(() => { msg.textContent = out.join(" "); input.value = ""; renderAttach(); });
+  });
+
+  /* ---------- STUDIA (preparazione) ---------- */
+  let pendingReview = null;
+  function renderSetup() {
+    const sel = $("qSubject"); const keep = (pendingReview && pendingReview.subjectId) || sel.value || load("i2_lastSubject"); sel.textContent = "";
+    if (!subjects.length) { const o = document.createElement("option"); o.value = ""; o.textContent = "Nessuna materia ancora"; sel.appendChild(o); }
+    subjects.forEach((s) => { const o = document.createElement("option"); o.value = s.id; o.textContent = s.name; sel.appendChild(o); });
+    if (keep && subjectById(keep)) sel.value = keep;
+    if (pendingReview) {
+      renderNotePick(pendingReview.noteIds);
+      reviewPlan = pendingReview; pendingReview = null;
+      mode = "mc"; document.querySelectorAll("#modes button").forEach((x) => x.classList.toggle("on", x.dataset.mode === "mc")); $("n").parentElement.hidden = false;
+      if (!pickedNotes().length) toast("Gli appunti di questi errori non ci sono più: scegli altri appunti");
+      refresh();
+    } else { reviewPlan = null; renderNotePick(); }
+  }
+  function renderNotePick(preselect) {
+    const sid = $("qSubject").value, box = $("qNotes"), hint = $("qNotesHint"); box.textContent = "";
+    const ns = notesOf(sid);
+    if (!subjects.length) hint.textContent = "Prima crea una materia e salva gli appunti nella sezione Materie.";
+    else if (!ns.length) hint.textContent = "Questa materia non ha ancora appunti: aggiungili nella sezione Materie.";
+    else hint.textContent = "Scegli uno o più appunti. Puoi anche metterli insieme per un ripasso generale.";
+    ns.forEach((n, i) => {
+      const l = el("label"); const c = el("input"); c.type = "checkbox"; c.value = n.id;
+      c.checked = preselect ? preselect.indexOf(n.id) >= 0 : i === 0;
+      l.classList.toggle("on", c.checked);
+      c.addEventListener("change", () => { l.classList.toggle("on", c.checked); refresh(); });
+      l.append(c, document.createTextNode(n.title)); box.appendChild(l);
+    });
+    refresh();
+  }
+  $("qSubject").addEventListener("change", () => { store("i2_lastSubject", $("qSubject").value); reviewPlan = null; renderNotePick(); });
+  const pickedNotes = () => Array.from($("qNotes").querySelectorAll("input:checked")).map((c) => notes.find((n) => n.id === c.value)).filter(Boolean);
+  document.querySelectorAll("#modes button").forEach((b) => b.addEventListener("click", () => {
+    mode = b.dataset.mode;
+    document.querySelectorAll("#modes button").forEach((x) => x.classList.toggle("on", x === b));
+    $("n").parentElement.hidden = mode === "oral";
+    refresh();
+  }));
+  function refresh() {
+    const ok = keyOk && pickedNotes().length > 0 && !busy;
+    $("start").disabled = !ok;
+    $("startHint").className = "hint";
+    if (busy) return;
+    $("startHint").textContent = !keyOk ? "Prima salva la chiave Gemini nelle Impostazioni." : !pickedNotes().length ? "Scegli almeno un appunto." : mode === "oral" ? "Racconterai la lezione con parole tue; l'insegnante ti dirà cosa hai detto bene e cosa manca." : "";
+    $("start").textContent = reviewPlan ? "Ripassa gli errori" : mode === "oral" ? "Comincia a ripetere" : "Inizia l'interrogazione";
+  }
+
+  /* ---------- generazione domande ---------- */
+  function fonteRule() {
+    return $("solo").checked
+      ? "FONTE UNICA: usa SOLO gli appunti forniti (testo scritto e file allegati). Non usare conoscenze tue per creare domande, risposte o spiegazioni. Se negli appunti c'è un errore evidente, non usarlo per fare la domanda."
+      : "Parti dagli appunti forniti (testo e file allegati). Puoi integrare con quello che sai, ma le domande devono restare sull'argomento degli appunti.";
+  }
+  function notesParts(list) {
+    const text = list.map((n) => "### " + n.title + "\n" + (n.text || "(nessun testo scritto: guarda i file allegati)")).join("\n\n");
+    const parts = [{ text: "\n\nAPPUNTI:\n\"\"\"\n" + text + "\n\"\"\"" }];
+    list.forEach((n) => n.attachments.forEach((a) => parts.push({ inline_data: { mime_type: a.mime, data: a.data } })));
+    return parts;
+  }
+  function kindRule(sub) {
+    const k = kindOf(sub); const w = who();
+    if (k.lang) return "La materia è " + k.lang + ": fai domande di vocabolario (significato, traduzione in entrambe le direzioni), grammatica (verbi, tempi, forme), comprensione delle frasi degli appunti e piccole traduzioni; scrivi le domande in italiano ma le parole e le frasi da conoscere in " + k.lang + (/superiore/.test(w.grade) ? ", e usa anche domande scritte direttamente in " + k.lang : "") + ".";
+    if (k.id === "latino" || k.id === "greco") return "La materia è " + k.name.toLowerCase() + ": fai domande su declinazioni e coniugazioni, analisi di forme, paradigmi, costrutti, traduzione di parole o frasi brevi, lessico e cultura presenti negli appunti.";
+    if (k.id === "mate") return "La materia è matematica: fai esercizi brevi da risolvere a mente o con pochi calcoli, domande su definizioni, proprietà, formule e procedimenti presenti negli appunti; le opzioni sbagliate devono essere errori tipici (segno, formula confusa, passaggio saltato). Scrivi le formule in modo leggibile con testo semplice.";
+    if (k.id === "fisica") return "La materia è fisica: fai domande su leggi, formule, unità di misura, grandezze e piccoli problemi numerici con numeri semplici presi dagli appunti; le opzioni sbagliate devono essere errori tipici (unità sbagliata, formula invertita).";
+    if (k.id === "chimica") return "La materia è chimica: fai domande su formule e nomi dei composti, reazioni e bilanciamento, tavola periodica, legami, moli e calcoli semplici, in base agli appunti. Scrivi le formule chimiche in testo semplice (es. H2O, CO2).";
+    return "";
+  }
+  function buildGenPrompt(n) {
+    const w = who();
+    const pool = Math.min(n * 2, 24), start = Math.floor(Math.random() * 90);
+    const common = [
+      "Sei un'insegnante di " + w.school + " italiana. Crei un quiz per " + w.desc + " a partire dai suoi appunti. " + w.style,
+      fonteRule(),
+      kindRule(subjectById($("qSubject").value)),
+      "Crea " + pool + " elementi TUTTI DIVERSI tra loro, su punti diversi degli appunti, dai più semplici ai più difficili. Se gli appunti sono brevi, creane meno piuttosto che ripeterti.",
+      reviewPlan ? "QUESTO È UN RIPASSO DEGLI ERRORI: concentra gli elementi su questi punti che " + (w.g === "m" ? "il ragazzo" : "la ragazza") + " ha sbagliato, formulandoli in modo diverso:\n- " + reviewPlan.points.join("\n- ") : "Per variare il quiz ogni volta: comincia dalla parte degli appunti intorno al " + start + "% del testo, poi copri anche tutto il resto, senza seguire l'ordine in cui gli argomenti compaiono.",
+      "Il campo \"brano\" deve contenere la frase o le frasi (massimo 3) degli appunti che contengono la risposta giusta, copiate PAROLA PER PAROLA, senza cambiare nulla e senza riassumere. Se un brano non esiste negli appunti (possibile solo se la fonte unica è disattivata), scrivi una stringa vuota.",
+      "Rispondi SOLO con un array JSON, senza altro testo."
+    ];
+    if (mode === "mc") common.push(
+      "Ogni elemento: {\"domanda\": string, \"opzioni\": [4 stringhe SENZA lettere davanti], \"corretta\": indice da 0 a 3 dell'opzione giusta, \"brano\": string, \"spiegazione\": 1-2 frasi semplici sul perché la risposta giusta è quella}.",
+      "Le 3 opzioni sbagliate devono essere plausibili ma chiaramente sbagliate in base agli appunti. Le opzioni devono avere lunghezza simile.");
+    else if (mode === "tf") common.push(
+      "Ogni elemento: {\"affermazione\": string (una frase che può essere vera o falsa secondo gli appunti), \"vera\": true oppure false, \"brano\": string, \"spiegazione\": 1-2 frasi semplici}.",
+      "Metà delle affermazioni devono essere vere e metà false. Le false devono cambiare un dettaglio preciso (una data, un nome, una causa, un numero), non essere assurde.");
+    else if (mode === "cloze") common.push(
+      "Ogni elemento: {\"frase\": string (una frase degli appunti in cui una parola o espressione importante è sostituita da ____), \"risposta\": la parola o espressione mancante, \"opzioni\": [4 stringhe tra cui la risposta giusta, le altre 3 plausibili ma sbagliate], \"brano\": string, \"spiegazione\": 1 frase semplice}.",
+      "Il buco deve riguardare un termine che conta (nome, data, luogo, concetto), mai un articolo o una parola banale.");
+    else if (mode === "open") common.push(
+      "Ogni elemento: {\"domanda\": string a cui si risponde con parole proprie in 1-3 frasi, \"risposta_attesa\": string con la risposta corretta in 1-3 frasi, \"brano\": string}.");
+    else if (mode === "flash") common.push(
+      "Ogni elemento è una flashcard: {\"fronte\": string (una domanda breve o un termine da spiegare), \"retro\": string (la risposta in 1-2 frasi chiare), \"brano\": string}.");
+    return common.join("\n");
+  }
+  function normalize(list) {
+    if (!Array.isArray(list)) throw fail("La risposta di Gemini non era leggibile. Riprova.");
+    const seen = new Set(), out = [];
+    const str = (v) => (typeof v === "string" ? v.trim() : "");
+    list.forEach((it) => {
+      if (!it) return;
+      const brano = str(it.brano), expl = str(it.spiegazione);
+      let item = null;
+      if (mode === "mc") {
+        const q = str(it.domanda); if (!q || !Array.isArray(it.opzioni) || it.opzioni.length < 3) return;
+        const idx = Number(it.corretta); if (!(idx >= 0 && idx < it.opzioni.length)) return;
+        item = { q, opts: shuffle(it.opzioni.map((t, i) => ({ text: String(t).replace(/^\s*[A-Da-d][\)\.\:]\s+/, "").trim(), correct: i === idx }))), brano, expl };
+      } else if (mode === "tf") {
+        const q = str(it.affermazione); if (!q || typeof it.vera !== "boolean") return;
+        item = { q, truth: it.vera, brano, expl };
+      } else if (mode === "cloze") {
+        const q = str(it.frase), ans = str(it.risposta); if (!q || !ans || q.indexOf("____") < 0 || !Array.isArray(it.opzioni)) return;
+        let opts = it.opzioni.map((t) => String(t).trim()).filter(Boolean);
+        if (!opts.some((o) => o.toLowerCase() === ans.toLowerCase())) opts.push(ans);
+        opts = Array.from(new Set(opts)).slice(0, 4); if (opts.length < 2) return;
+        item = { q, ans, opts: shuffle(opts.map((t) => ({ text: t, correct: t.toLowerCase() === ans.toLowerCase() }))), brano, expl };
+      } else if (mode === "open") {
+        const q = str(it.domanda), exp = str(it.risposta_attesa); if (!q || !exp) return;
+        item = { q, expected: exp, brano };
+      } else if (mode === "flash") {
+        const q = str(it.fronte), back = str(it.retro); if (!q || !back) return;
+        item = { q, back, brano };
+      }
+      if (!item) return;
+      const key = item.q.toLowerCase(); if (seen.has(key)) return; seen.add(key); out.push(item);
+    });
+    return out;
+  }
+
+  /* ---------- schermate del quiz ---------- */
+  const page = $("page");
+  function drawBar() {
+    $("prog").textContent = quiz.finished ? "Finito" : (mode === "oral" ? "Ripeti la lezione" : "Domanda " + (quiz.idx + 1) + " di " + quiz.items.length);
+    const s = $("score"); s.textContent = "";
+    if (mode !== "oral") { s.appendChild(el("span", "chip ok", "Esatte " + quiz.right)); s.appendChild(el("span", "chip no", "Sbagliate " + quiz.wrong.length)); }
+  }
+  function renderQuestion() {
+    const it = quiz.items[quiz.idx];
+    quiz.answered = false; page.textContent = "";
+    page.appendChild(el("p", "qnum", (mode === "flash" ? "Flashcard " : "Domanda ") + (quiz.idx + 1)));
+    if (mode === "cloze") {
+      const h = el("h2", "q"); const bits = it.q.split("____");
+      bits.forEach((b, i) => { h.appendChild(document.createTextNode(b)); if (i < bits.length - 1) h.appendChild(el("span", "blank")); });
+      page.appendChild(h);
+    } else page.appendChild(el("h2", "q", it.q));
+
+    if (mode === "mc" || mode === "cloze") {
+      const box = el("div", "opts");
+      it.opts.forEach((o, i) => {
+        const b = el("button", "opt"); b.type = "button";
+        b.appendChild(el("span", "L", "ABCD"[i])); b.appendChild(el("span", "T", o.text));
+        b.addEventListener("click", () => answerChoice(i, box));
+        box.appendChild(b);
+      });
+      page.appendChild(box);
+    } else if (mode === "tf") {
+      const box = el("div", "tf");
+      [["Vero", true], ["Falso", false]].forEach(([label, val]) => {
+        const b = el("button", "opt", label); b.type = "button";
+        b.addEventListener("click", () => answerTF(val, box));
+        box.appendChild(b);
+      });
+      page.appendChild(box);
+    } else if (mode === "flash") {
+      const row = el("div", "btns");
+      const rev = el("button", "main", "Mostra la risposta"); rev.type = "button";
+      rev.addEventListener("click", () => {
+        rev.remove();
+        page.appendChild(el("p", "notes-label", "Risposta:"));
+        page.appendChild(el("div", "flash", it.back));
+        page.appendChild(el("p", "expl", "La sapevi?"));
+        const r2 = el("div", "btns");
+        const yes = el("button", "main", "Sì, la sapevo"); yes.type = "button"; yes.style.background = "var(--good)";
+        const no = el("button", "ghost danger", "No, da ripassare"); no.type = "button";
+        yes.addEventListener("click", () => { r2.remove(); showResult(true, "", "", true); });
+        no.addEventListener("click", () => { r2.remove(); showResult(false, "", it.brano, true); });
+        r2.append(yes, no); page.appendChild(r2);
+      });
+      row.appendChild(rev); page.appendChild(row);
+    } else if (mode === "open") {
+      const ta = el("textarea"); ta.id = "answer"; ta.setAttribute("aria-label", "La tua risposta");
+      ta.placeholder = "Scrivi con parole tue. Se non sai, premi «Non lo so».";
+      const row = el("div", "btns");
+      const send = el("button", "main", "Controlla"); send.type = "button";
+      const skip = el("button", "ghost", "Non lo so"); skip.type = "button";
+      const mic = el("button", "mic", "🎤 Detta"); mic.type = "button"; mic.hidden = true;
+      send.addEventListener("click", () => { const v = ta.value.trim(); if (v) answerOpen(v, ta, row); });
+      skip.addEventListener("click", () => answerOpen("", ta, row));
+      ta.addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) send.click(); });
+      row.append(send, skip, mic); page.append(ta, row); attachMic(mic, ta);
+      setTimeout(() => ta.focus(), 50);
+    }
+    drawBar();
+  }
+  function showResult(ok, expl, brano, silent) {
+    quiz.answered = true;
+    const it = quiz.items[quiz.idx];
+    if (ok) { quiz.right++; quiz.rightList.push(it.q); } else quiz.wrong.push({ q: it.q, brano, answer: it.back || it.expected || it.ans || (it.opts ? (it.opts.find((o) => o.correct) || {}).text : (typeof it.truth === "boolean" ? (it.truth ? "Vero" : "Falso") : "")) });
+    if (!silent) page.appendChild(el("div", "result " + (ok ? "yes" : "no"), ok ? "Esatto" : "Sbagliato"));
+    if (!ok && brano) { page.appendChild(el("p", "notes-label", "Negli appunti c'è scritto:")); page.appendChild(el("blockquote", "notes", brano)); }
+    if (expl) page.appendChild(el("p", "expl", expl));
+    const last = quiz.idx >= quiz.items.length - 1;
+    const next = el("button", "main", last ? "Vedi il risultato" : mode === "flash" ? "Prossima carta" : "Prossima domanda"); next.type = "button"; next.style.alignSelf = "flex-start";
+    next.addEventListener("click", () => turn(last));
+    page.appendChild(next); drawBar();
+    next.scrollIntoView({ block: "nearest", behavior: "smooth" }); next.focus();
+  }
+  function answerChoice(i, box) {
+    if (quiz.answered) return;
+    const it = quiz.items[quiz.idx], btns = Array.from(box.children);
+    btns.forEach((b, k) => { b.disabled = true; if (it.opts[k].correct) b.classList.add("right"); });
+    const ok = it.opts[i].correct; if (!ok) btns[i].classList.add("wrong");
+    showResult(ok, it.expl, it.brano);
+  }
+  function answerTF(val, box) {
+    if (quiz.answered) return;
+    const it = quiz.items[quiz.idx], btns = Array.from(box.children);
+    btns.forEach((b, k) => { b.disabled = true; const isTrueBtn = k === 0; if (isTrueBtn === it.truth) b.classList.add("right"); else if (isTrueBtn === val) b.classList.add("wrong"); });
+    showResult(val === it.truth, it.expl, it.brano);
+  }
+  function answerOpen(text, ta, row) {
+    if (quiz.answered || busy) return;
+    const it = quiz.items[quiz.idx], w = who();
+    ta.disabled = true; Array.from(row.children).forEach((b) => (b.disabled = true));
+    if (!text) { row.hidden = true; showResult(false, "Nessun problema. Ecco cosa dicevano gli appunti: " + it.expected, it.brano); return; }
+    busy = true;
+    const wait = el("p", "loading", "Controllo la risposta..."); page.appendChild(wait);
+    const prompt = [
+      "Sei un'insegnante di " + w.school + " italiana che corregge con gentilezza la risposta di " + w.desc + ". " + w.style + (w.name ? " Rivolgiti a " + w.name + " per nome." : ""),
+      fonteRule(),
+      "Domanda: " + it.q, "Risposta corretta di riferimento: " + it.expected, "Parte degli appunti: " + (it.brano || "(non disponibile)"), "Risposta " + w.pron + ": " + text,
+      "Decidi se la risposta è ESATTA (il contenuto essenziale è corretto, anche con parole diverse) oppure SBAGLIATA (manca il punto essenziale o è scorretta).",
+      "Rispondi SOLO con un oggetto JSON: {\"esito\": \"esatto\" oppure \"sbagliato\", \"spiegazione\": 1-3 frasi semplici: se è esatta conferma e aggiungi eventuali dettagli mancanti, se è sbagliata spiega con calma cosa non torna e qual è la risposta giusta}."
+    ].join("\n");
+    askJSON([{ text: prompt }], 0.3).then((r) => {
+      wait.remove(); busy = false; row.hidden = true;
+      showResult(String(r && r.esito).toLowerCase().indexOf("esatt") === 0, String((r && r.spiegazione) || ""), it.brano);
+    }).catch((e) => {
+      wait.remove(); busy = false;
+      ta.disabled = false; Array.from(row.children).forEach((b) => (b.disabled = false));
+      const m = el("p", "err", explain(e)); page.appendChild(m); setTimeout(() => m.remove(), 6000);
+    });
+  }
+  function turn(toFinal) {
+    page.classList.add("flip-out");
+    setTimeout(() => {
+      if (toFinal) renderFinal(); else { quiz.idx++; renderQuestion(); }
+      page.classList.remove("flip-out"); page.classList.add("flip-in");
+      setTimeout(() => page.classList.remove("flip-in"), 450);
+      window.scrollTo({ top: 0 });
+    }, 400);
+  }
+  function saveSession(extra) {
+    const s = Object.assign({ id: uid(), date: Date.now(), subjectId: quiz.subjectId, noteIds: quiz.noteIds, noteTitles: quiz.noteTitles, mode, right: quiz.right, total: quiz.right + quiz.wrong.length, rightList: quiz.rightList.slice(), wrong: quiz.wrong, note: "" }, extra || {});
+    if (!s.total) return Promise.resolve();
+    const slot = el("div"); page.appendChild(slot);
+    return dbPut("sessions", s).then(reloadAll).then(() => teacherNote(s)).then((note) => {
+      s.note = note; return dbPut("sessions", s).then(reloadAll).then(() => {
+        slot.appendChild(el("p", "notes-label", "Nota sul registro:")); slot.appendChild(el("blockquote", "notes", note));
+      });
+    }).catch(() => {});
+  }
+  // nota dell'insegnante per il registro: 2-3 frasi su cosa è andato bene e cosa è da rivedere
+  function teacherNote(s) {
+    const w = who(); const sub = subjectById(s.subjectId); const g = gradeOf([s]);
+    const local = () => {
+      const okN = (s.rightList || []).length, noN = (s.wrong || []).length;
+      if (s.mode === "oral") return "Esposizione su " + (s.noteTitles || []).join(", ") + ": voto " + s.voto + ". " + (okN ? "Detto bene: " + s.rightList.slice(0, 3).join("; ") + ". " : "") + (noN ? "Da rivedere: " + s.wrong.slice(0, 3).map((x) => x.q).join("; ") + "." : "");
+      return (noN === 0 ? "Tutte le risposte giuste, ottimo lavoro. " : okN === 0 ? "Nessuna risposta giusta: rileggi gli appunti con calma e riprova. " : "Risposte giuste " + okN + " su " + (okN + noN) + ". ") + (noN ? "Da rivedere: " + s.wrong.slice(0, 3).map((x) => x.q).join("; ") + "." : "");
+    };
+    if (!keyOk) return Promise.resolve(local());
+    const prompt = [
+      "Sei un'insegnante di " + w.school + " italiana. " + w.style + " Scrivi la nota per il registro dopo un'interrogazione di " + w.desc + ". Materia: " + (sub ? sub.name : "") + ". Argomento: " + (s.noteTitles || []).join(", ") + ". Tipo: " + MODE_NAMES[s.mode] + ". Voto in decimi: " + (g ? g.voto : "") + ".",
+      "Risposte giuste: " + ((s.rightList || []).join(" | ") || "nessuna"),
+      "Risposte sbagliate o punti mancanti: " + ((s.wrong || []).map((x) => x.q + (x.answer ? " (giusto: " + x.answer + ")" : "")).join(" | ") || "nessuno"),
+      "Scrivi 2-3 frasi" + (w.name ? ", rivolgendoti a " + w.name + " per nome" : "") + ": prima dove è andata bene (argomenti precisi), poi cosa deve rivedere (argomenti precisi), con tono gentile e incoraggiante. Niente elenchi.",
+      "Rispondi SOLO con un oggetto JSON: {\"nota\": string}."
+    ].join("\n");
+    return askJSON([{ text: prompt }], 0.5).then((r) => (r && typeof r.nota === "string" && r.nota.trim()) ? r.nota.trim() : local()).catch(local);
+  }
+  function renderFinal() {
+    quiz.finished = true;
+    const done = quiz.right + quiz.wrong.length, w = who();
+    page.textContent = "";
+    page.appendChild(el("p", "qnum", "Interrogazione finita"));
+    page.appendChild(el("p", "big", "Esatte " + quiz.right + " su " + done));
+    const p = done ? Math.round(100 * quiz.right / done) : 0;
+    page.appendChild(el("p", "expl", p === 100 ? "Nessun errore. Ottimo lavoro" + (w.name ? ", " + w.name : "") + "!" : p >= 70 ? "Bene! Ripassa i punti qui sotto e sei a posto." : p >= 40 ? "Ci siamo quasi: rileggi gli appunti sui punti qui sotto e riprova." : "Non ti scoraggiare: rileggi con calma gli appunti e poi rifai l'interrogazione."));
+    if (quiz.wrong.length) {
+      page.appendChild(el("p", "notes-label", "Da ripassare:"));
+      const list = el("div", "final-list");
+      quiz.wrong.forEach((x) => { const d = el("div", "final-item"); d.appendChild(el("p", "expl", x.q)); if (x.answer) d.appendChild(el("p", "hint", "Risposta: " + x.answer)); if (x.brano) d.appendChild(el("blockquote", "notes", x.brano)); list.appendChild(d); });
+      page.appendChild(list);
+    }
+    const row = el("div", "btns");
+    const again = el("button", "main", "Nuova interrogazione"); again.type = "button"; again.addEventListener("click", backToSetup);
+    const prog = el("button", "ghost", "Vedi il registro"); prog.type = "button"; prog.addEventListener("click", () => { quiz = null; show("registro"); });
+    row.append(again, prog); page.appendChild(row);
+    $("finish").hidden = true; drawBar();
+    saveSession();
+  }
+  function backToSetup() { quiz = null; reviewPlan = null; show("studia"); }
+  $("finish").addEventListener("click", () => { if (quiz && !busy && !quiz.finished) { if (mode === "oral") backToSetup(); else turn(true); } });
+
+  /* ---------- ripeti la lezione ---------- */
+  function renderOral() {
+    const w = who();
+    page.textContent = "";
+    page.appendChild(el("p", "qnum", "Ripeti la lezione"));
+    page.appendChild(el("h2", "q", "Racconta con parole tue tutto quello che ricordi di: " + quiz.noteTitles.join(", ")));
+    page.appendChild(el("p", "hint", "Come se fossi alla cattedra. Puoi scrivere o dettare. Quando hai finito premi «Ho finito»."));
+    const ta = el("textarea"); ta.id = "oralText"; ta.style.minHeight = "180px"; ta.placeholder = "Allora, la lezione parla di...";
+    const row = el("div", "btns");
+    const send = el("button", "main", "Ho finito"); send.type = "button";
+    const mic = el("button", "mic", "🎤 Detta"); mic.type = "button"; mic.hidden = true;
+    row.append(send, mic); page.append(ta, row); attachMic(mic, ta);
+    send.addEventListener("click", () => {
+      const text = ta.value.trim(); if (text.length < 20) { toast("Racconta un po' di più"); return; }
+      if (busy) return; busy = true; ta.disabled = true; send.disabled = true;
+      const wait = el("p", "loading", "L'insegnante ascolta e prende appunti..."); page.appendChild(wait);
+      const prompt = [
+        "Sei un'insegnante di " + w.school + " italiana. " + w.desc + " ha studiato gli appunti qui sotto e ora ripete la lezione con parole sue. " + w.style + (w.name ? " Rivolgiti a " + w.name + " per nome." : ""),
+        fonteRule(),
+        "Confronta quello che ha detto con gli appunti. Elenca i punti importanti degli appunti che ha detto bene, quelli che ha detto in modo sbagliato o confuso, e quelli importanti che ha dimenticato del tutto. Sii gentile ma precisa.",
+        "Rispondi SOLO con un oggetto JSON: {\"voto\": numero intero da 1 a 10, \"commento\": 2-3 frasi di incoraggiamento che dicono com'è andata, \"detti_bene\": [stringhe brevi], \"sbagliati\": [{\"cosa\": string breve, \"giusto\": string che spiega la versione corretta secondo gli appunti}], \"dimenticati\": [{\"cosa\": string breve, \"brano\": frase degli appunti copiata parola per parola che lo spiega}]}.",
+        "ESPOSIZIONE " + w.pron.toUpperCase() + ":\n\"\"\"\n" + text + "\n\"\"\""
+      ].join("\n");
+      askJSON([{ text: prompt }].concat(notesParts(quiz.notes)), 0.3).then((r) => {
+        wait.remove(); busy = false;
+        const good = Array.isArray(r.detti_bene) ? r.detti_bene : [], bad = Array.isArray(r.sbagliati) ? r.sbagliati : [], miss = Array.isArray(r.dimenticati) ? r.dimenticati : [];
+        const voto = Math.max(1, Math.min(10, parseInt(r.voto, 10) || 5));
+        page.textContent = "";
+        page.appendChild(el("p", "qnum", "Com'è andata"));
+        page.appendChild(el("p", "big", "Voto " + voto + "/10"));
+        page.appendChild(el("div", "result " + (voto >= 8 ? "yes" : voto >= 6 ? "mid" : "no"), voto >= 8 ? "Brava interrogazione" : voto >= 6 ? "Quasi" : "Da rivedere"));
+        if (r.commento) page.appendChild(el("p", "expl", String(r.commento)));
+        const section = (title, items, render) => { if (!items.length) return; page.appendChild(el("p", "notes-label", title)); const ul = el("ul", "plain"); items.forEach((x) => { const li = el("li"); render(li, x); ul.appendChild(li); }); page.appendChild(ul); };
+        section("Hai detto bene:", good, (li, x) => { li.textContent = String(x); });
+        section("Da correggere:", bad, (li, x) => { li.appendChild(el("b", null, String(x.cosa || x))); if (x.giusto) li.appendChild(document.createTextNode(" — " + x.giusto)); });
+        section("Hai dimenticato:", miss, (li, x) => { li.appendChild(el("b", null, String(x.cosa || x))); if (x.brano) li.appendChild(el("blockquote", "notes", String(x.brano))); });
+        quiz.right = good.length; quiz.rightList = good.map((x) => String(x)); quiz.wrong = bad.map((x) => ({ q: String(x.cosa || x), answer: String(x.giusto || ""), brano: "" })).concat(miss.map((x) => ({ q: String(x.cosa || x), answer: "", brano: String(x.brano || "") })));
+        quiz.finished = true;
+        const row2 = el("div", "btns");
+        const again = el("button", "main", "Nuova interrogazione"); again.type = "button"; again.addEventListener("click", backToSetup);
+        const prog = el("button", "ghost", "Vedi il registro"); prog.type = "button"; prog.addEventListener("click", () => { quiz = null; show("registro"); });
+        row2.append(again, prog); page.appendChild(row2);
+        $("finish").hidden = true; drawBar();
+        saveSession({ voto });
+      }).catch((e) => { wait.remove(); busy = false; ta.disabled = false; send.disabled = false; const m = el("p", "err", explain(e)); page.appendChild(m); setTimeout(() => m.remove(), 6000); });
+    });
+    setTimeout(() => ta.focus(), 50);
+  }
+
+  /* ---------- avvio quiz ---------- */
+  $("start").addEventListener("click", () => {
+    const list = pickedNotes(); if (!list.length) return;
+    const n = parseInt($("n").value, 10);
+    const subj = subjectById($("qSubject").value);
+    quiz = { subjectId: subj ? subj.id : "", noteIds: list.map((x) => x.id), noteTitles: list.map((x) => x.title), notes: list, items: [], idx: 0, right: 0, rightList: [], wrong: [], answered: false, finished: false };
+    if (mode === "oral") { show("quiz"); $("finish").hidden = false; $("finish").textContent = "Annulla"; renderOral(); return; }
+    $("finish").textContent = "Termina";
+    busy = true; $("start").disabled = true;
+    $("startHint").className = "hint"; $("startHint").textContent = "Preparo le domande dagli appunti... ci vuole qualche secondo.";
+    const parts = [{ text: buildGenPrompt(n) }].concat(notesParts(list));
+    askJSON(parts, 1.0).then((raw) => {
+      let items = normalize(raw);
+      if (!items.length) throw fail("Non sono riuscito a creare domande da questi appunti. Prova con appunti più lunghi.");
+      quiz.items = shuffle(items).slice(0, n);
+      busy = false; reviewPlan = null;
+      show("quiz"); $("finish").hidden = false; renderQuestion();
+    }).catch((e) => { busy = false; $("startHint").className = "hint err"; $("startHint").textContent = explain(e); $("start").disabled = false; });
+  });
+
+  /* ---------- PROGRESSI ---------- */
+  // voto in decimi: 10 × risposte giuste / risposte totali (il «Ripeti la lezione» conta come il suo voto su 10)
+  function gradeOf(list) {
+    let r = 0, t = 0;
+    list.forEach((s) => { if (s.mode === "oral" && s.voto) { r += s.voto; t += 10; } else { r += s.right; t += s.total; } });
+    return t ? { voto: Math.round(10 * r / t * 10) / 10, r, t } : null;
+  }
+  function streakOf(list) {
+    const days = new Set(list.map((s) => new Date(s.date).toDateString()));
+    const d = new Date(); let n = 0;
+    const today = days.has(d.toDateString());
+    if (!today) d.setDate(d.getDate() - 1); // se oggi non hai ancora studiato, la fiamma di ieri è ancora accesa
+    while (days.has(d.toDateString())) { n++; d.setDate(d.getDate() - 1); }
+    return { n, today };
+  }
+  function flameSVG() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg"); svg.setAttribute("viewBox", "0 0 48 56"); svg.setAttribute("aria-hidden", "true");
+    const out = document.createElementNS(ns, "path"); out.setAttribute("class", "f-out");
+    out.setAttribute("d", "M24 2c2 9 10 13 12 22 3-2 4-6 4-9 6 7 8 14 6 22-2 9-10 17-22 17S4 46 2 37C0 27 8 20 12 12c1 4 3 6 6 7-1-7 2-13 6-17z");
+    const inn = document.createElementNS(ns, "path"); inn.setAttribute("class", "f-in");
+    inn.setAttribute("d", "M24 54c-7 0-12-5-12-11 0-6 5-9 7-14 2 3 4 4 6 4 0-4 1-7 4-10 2 6 7 9 7 17 0 7-5 14-12 14z");
+    svg.append(out, inn); return svg;
+  }
+  function streakEl(st) {
+    const streak = el("div", "streak " + (st.n > 0 ? "on" : "off"));
+    streak.appendChild(flameSVG());
+    const txt = el("div"); txt.appendChild(el("b", null, String(st.n))); txt.appendChild(el("small", null, st.n === 1 ? "giorno di fila" : "giorni di fila"));
+    streak.appendChild(txt); return streak;
+  }
+  function votoEl(g) {
+    const v = el("div", "voto " + (!g ? "none" : g.voto >= 8 ? "ok" : g.voto >= 6 ? "mid" : "no"));
+    v.appendChild(el("b", null, g ? String(g.voto).replace(".", ",") : "—")); v.appendChild(el("small", null, g ? "voto" : "da fare"));
+    return v;
+  }
+  function gradeChip(s) {
+    const gs = gradeOf([s]); const vv = gs ? gs.voto : 0;
+    return el("span", "chip " + (vv >= 8 ? "ok" : vv >= 6 ? "mid" : "no"), "Voto " + String(vv).replace(".", ","));
+  }
+  function renderHome() {
+    $("welcome").hidden = !!load("i2_welcomeDone") || (keyOk && subjects.length > 0);
+    const box = $("subCards"); box.textContent = "";
+    $("homeEmpty").hidden = subjects.length > 0;
+    subjects.forEach((sub) => {
+      const ss = sessions.filter((x) => x.subjectId === sub.id);
+      const card = el("button", "sub-card link"); card.type = "button";
+      const name = el("div", "name"); const dot = el("span", "dot"); dot.style.background = sub.color; name.append(dot, document.createTextNode(sub.name)); card.appendChild(name);
+      card.appendChild(streakEl(streakOf(ss)));
+      card.appendChild(votoEl(gradeOf(ss)));
+      const last = ss[0];
+      card.appendChild(el("div", "meta", last ? "Ultimo ripasso: " + ((last.noteTitles || []).join(", ") || "appunti") + " · " + fmtDate(last.date) : "Nessun ripasso ancora: tocca per aggiungere gli appunti"));
+      card.addEventListener("click", () => openSubject(sub.id));
+      box.appendChild(card);
+    });
+  }
+  function renderRegistro() {
+    const box = $("regList"); box.textContent = "";
+    $("regEmpty").hidden = sessions.length > 0;
+    sessions.forEach((s) => {
+      const sub = subjectById(s.subjectId);
+      const card = el("div", "reg");
+      const top = el("div", "top");
+      const dot = el("span", "dot"); dot.style.background = sub ? sub.color : "#888";
+      const g = el("div", "grow"); g.appendChild(el("div", "t", (sub ? sub.name : "Materia eliminata") + " · " + ((s.noteTitles || []).join(", ") || "appunti")));
+      g.appendChild(el("div", "m", fmtDate(s.date) + " · " + MODE_NAMES[s.mode] + (s.mode === "oral" ? "" : " · " + s.right + " giuste su " + s.total)));
+      top.append(dot, g, votoEl(gradeOf([s]))); card.appendChild(top);
+      if (s.note) card.appendChild(el("p", "note", s.note));
+      const det = el("details"); det.appendChild(el("summary", null, "Dettaglio delle risposte"));
+      const okL = s.rightList || [];
+      if (okL.length) { det.appendChild(el("p", "lab g", "Andate bene")); const ul = el("ul", "ok-list"); okL.forEach((q) => ul.appendChild(el("li", null, q))); det.appendChild(ul); }
+      if ((s.wrong || []).length) { det.appendChild(el("p", "lab b", "Da rivedere")); const ul = el("ul", "no-list"); s.wrong.forEach((w) => ul.appendChild(el("li", null, w.q + (w.answer ? " → " + w.answer : "")))); det.appendChild(ul); }
+      if (okL.length || (s.wrong || []).length) card.appendChild(det);
+      box.appendChild(card);
+    });
+  }
+
+  /* ---------- backup ---------- */
+  $("exportBtn").addEventListener("click", () => {
+    const data = { app: "interrogami", version: 2, exported: Date.now(), subjects, notes, sessions, settings: { name: load("i2_name"), gender: load("i2_gender"), grade: load("i2_grade") } };
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "interrogami-backup-" + new Date().toISOString().slice(0, 10) + ".json";
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    $("dataMsg").textContent = "Backup scaricato. Tienilo in un posto sicuro (OneDrive, Drive...).";
+  });
+  $("importFile").addEventListener("change", function () {
+    const f = this.files && this.files[0]; if (!f) return;
+    reader(f, "readAsText").then((t) => {
+      const d = JSON.parse(String(t)); if (d.app !== "interrogami") throw new Error("file sbagliato");
+      const put = [];
+      (d.subjects || []).forEach((s) => put.push(dbPut("subjects", s)));
+      (d.notes || []).forEach((n) => put.push(dbPut("notes", n)));
+      (d.sessions || []).forEach((s) => put.push(dbPut("sessions", s)));
+      return Promise.all(put).then(() => { if (d.settings) { if (d.settings.name) store("i2_name", d.settings.name); if (d.settings.gender) store("i2_gender", d.settings.gender); if (d.settings.grade) store("i2_grade", d.settings.grade); loadSettings(); } });
+    }).then(reloadAll).then(() => { $("dataMsg").textContent = "Backup caricato: " + subjects.length + " materie, " + notes.length + " appunti, " + sessions.length + " interrogazioni."; toast("Backup caricato"); }).catch(() => { $("dataMsg").textContent = "Questo file non è un backup di Interrogami."; });
+    this.value = "";
+  });
+  $("wipeBtn").addEventListener("click", () => {
+    confirmBox("Cancellare TUTTO: materie, appunti e storico? Non si può tornare indietro (a meno che tu abbia un backup).", "Sì, cancella tutto").then((yes) => {
+      if (!yes) return;
+      Promise.all([dbClear("subjects"), dbClear("notes"), dbClear("sessions")]).then(reloadAll).then(() => { $("dataMsg").textContent = "Tutto cancellato."; toast("Tutto cancellato"); });
+    });
+  });
+
+  $("goSettings").addEventListener("click", () => show("impostazioni"));
+  $("hideWelcome").addEventListener("click", () => { store("i2_welcomeDone", "1"); renderHome(); });
+
+  $("resetBtn").addEventListener("click", () => {
+    confirmBox("Azzerare completamente l'app su questo dispositivo? Cancella materie, appunti, registro, nome, classe e chiave Gemini: tornerà come appena installata. Non si può tornare indietro (a meno che tu abbia un backup).", "Sì, azzera tutto").then((yes) => {
+      if (!yes) return;
+      Promise.all([dbClear("subjects"), dbClear("notes"), dbClear("sessions")]).then(reloadAll).catch(() => {}).then(() => {
+        ["i2_key", "i2_model", "i2_name", "i2_gender", "i2_grade", "i2_lastSubject", "i2_welcomeDone"].forEach((k) => store(k, null));
+        keyOk = false; $("key").value = ""; $("keyMsg").textContent = ""; loadSettings(); show("home"); toast("App azzerata");
+      });
+    });
+  });
+
+  /* ---------- avvio ---------- */
+  function loadSettings() { $("sName2").value = load("i2_name"); $("gender").value = load("i2_gender") || "f"; $("grade").value = load("i2_grade") || "1ª media"; greet(); }
+  loadSettings();
+  if (EMBEDDED) { $("keyCard").hidden = true; checkKey(); }
+  else { const k = load("i2_key"); if (k) { $("key").value = k; checkKey(); } }
+  openDB().then((d) => { db = d; return reloadAll(); }).catch(() => { toast("Questo browser non permette di salvare gli appunti"); }).then(() => {
+    show("home");
+  });
+  if ("serviceWorker" in navigator && location.protocol !== "file:") { window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); }); }
+})();
+</script>
+</body>
+</html>
